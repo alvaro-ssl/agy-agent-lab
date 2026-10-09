@@ -6,10 +6,14 @@ Welcome to **Track 1** of the CxO Leaders Exchange. This track focuses on execut
 
 ## Directory Structure
 
+> [!IMPORTANT]
+> - **`agy_workspace/`** is the participant workspace that **must be placed in each user's local directory** for the hands-on exercise.
+> - **`utils/`** is **only needed for facilitator setup, documentation, and testing the exercise** (participants do not need `utils/` in their active workspace).
+
 ```text
 1-agy/
 ├── README.md                              # Track 1 overview and quick start guide
-├── agy_workspace/                         # Pre-configured Antigravity workspace for Play 1 & Play 2
+├── agy_workspace/                         # REQUIRED in each user's local directory (Play 1 & Play 2 workspace)
 │   ├── .agents/                           # Workspace-wide AGY rules & 16 pre-installed skills
 │   │   ├── rules/                         # cymbal-governance.md & deploying.md guardrails
 │   │   └── skills/                        # google-agents-cli-*, enable-a2ui, executive-stress-test, etc.
@@ -22,7 +26,7 @@ Welcome to **Track 1** of the CxO Leaders Exchange. This track focuses on execut
 │   └── autonomous-ops-agent/              # Play 2: ADK Production Agent & Evaluation Suite
 │       ├── app/agent.py                   # ADK agent wired with enterprise & DTO tools + sandbox simulation
 │       └── tests/eval/                    # Trajectory + LLM-as-Judge €500 governance evaluation suite
-└── utils/                                 # Workshop guides, laptop setup, and E2E verification
+└── utils/                                 # ONLY needed for testing & facilitator setup (not required by users)
     ├── WORKSHOP_GUIDE.md                  # Step-by-step Play 1 & Play 2 facilitator/participant guide
     ├── lab-agy-gdoc.md                    # Full executive briefing & copy-paste prompt script
     ├── project_brief.md                   # Cymbal EMEA Autonomous SLA & Incident War-Room Agent brief
