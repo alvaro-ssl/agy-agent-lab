@@ -14,6 +14,7 @@ Welcome to **Track 1** of the CxO Leaders Exchange. This track focuses on execut
 1-agy/
 ├── README.md                              # Track 1 overview and quick start guide
 ├── agy_workspace/                         # REQUIRED in each user's local directory (Play 1 & Play 2 workspace)
+│   ├── requirements.txt                   # Consolidated Python dependencies (fastapi, uvicorn, google-adk, google-genai, requests)
 │   ├── .agents/                           # Workspace-wide AGY rules & 16 pre-installed skills
 │   │   ├── rules/                         # cymbal-governance.md & deploying.md guardrails
 │   │   └── skills/                        # google-agents-cli-*, enable-a2ui, executive-stress-test, etc.
@@ -30,7 +31,7 @@ Welcome to **Track 1** of the CxO Leaders Exchange. This track focuses on execut
     ├── WORKSHOP_GUIDE.md                  # Step-by-step Play 1 & Play 2 facilitator/participant guide
     ├── lab-agy-gdoc.md                    # Full executive briefing & copy-paste prompt script
     ├── project_brief.md                   # Cymbal EMEA Autonomous SLA & Incident War-Room Agent brief
-    ├── setup-laptops.sh                   # Pre-session laptop bootstrap (uv, APIs, skills, SQLite, git history)
+    ├── setup-laptops.sh                   # Pre-session laptop bootstrap (uv, .venv, APIs, skills, SQLite, git history)
     ├── cymbal-control-tower.bundle        # Git bundle preserving the 2-commit v1.3.0 -> v1.4.0 regression history
     └── test_workshop_e2e.py               # Automated E2E verification suite for Play 1 & Play 2
 ```
@@ -48,18 +49,26 @@ Welcome to **Track 1** of the CxO Leaders Exchange. This track focuses on execut
 
 ## Quick Start
 
-1. **Bootstrap Presenter / Participant Laptop:**
+1. **Create the Local Virtualenv & Install Dependencies (inside `agy_workspace/`):**
+   ```bash
+   cd 1-agy/agy_workspace
+   python3 -m venv .venv
+   .venv/bin/pip install -r requirements.txt
+   # (which installs: fastapi uvicorn google-adk google-genai requests pydantic httpx pytest)
+   ```
+
+2. **Or Run the Full Pre-Session Laptop Bootstrap (`utils/setup-laptops.sh`):**
    ```bash
    bash 1-agy/utils/setup-laptops.sh
    ```
-   This ensures `uv` and `google-agents-cli` are installed, syncs `.agents/rules/` and `.agents/skills/`, initializes `cymbal_ops.db`, and restores the 2-commit Git history (`v1.3.0` → `v1.4.0`) inside `1-agy/agy_workspace/cymbal-control-tower/`.
+   This automatically creates `1-agy/agy_workspace/.venv`, installs all dependencies (`requirements.txt`), ensures `uv` and `google-agents-cli` are installed, syncs `.agents/rules/` and `.agents/skills/`, initializes `cymbal_ops.db`, and restores the 2-commit Git history (`v1.3.0` → `v1.4.0`) inside `1-agy/agy_workspace/cymbal-control-tower/`.
 
-2. **Verify Everything End-to-End:**
+3. **Verify Everything End-to-End (Testing Only):**
    ```bash
    python3 1-agy/utils/test_workshop_e2e.py
    ```
 
-3. **Run the Workshop:**
+4. **Run the Workshop:**
    - Open [`1-agy/utils/WORKSHOP_GUIDE.md`](utils/WORKSHOP_GUIDE.md) or [`1-agy/utils/lab-agy-gdoc.md`](utils/lab-agy-gdoc.md) for the complete run-of-show and copy-paste prompts.
    - For **Play 1**, open `1-agy/agy_workspace/cymbal-control-tower` in Antigravity (`AGY`).
    - For **Play 2**, open `1-agy/agy_workspace` in Antigravity (`AGY`).
