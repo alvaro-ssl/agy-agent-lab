@@ -50,12 +50,19 @@ Welcome to **Track 1** of the CxO Leaders Exchange. This track focuses on execut
 ## Quick Start
 
 1. **Create the Local Virtualenv & Install Dependencies (inside `agy_workspace/`):**
-   ```bash
-   cd 1-agy/agy_workspace
-   python3 -m venv .venv
-   .venv/bin/pip install -r requirements.txt
-   # (which installs: fastapi uvicorn google-adk google-genai requests pydantic httpx pytest)
-   ```
+   - **If `python3` (3.11+) is already installed:**
+     ```bash
+     cd 1-agy/agy_workspace
+     python3 -m venv .venv
+     .venv/bin/pip install -r requirements.txt
+     ```
+   - **If `python3` is NOT installed (or is older than 3.11 on macOS), use `uv` to auto-download standalone Python 3.12:**
+     ```bash
+     curl -LsSf https://astral.sh/uv/install.sh | sh && export PATH="$HOME/.local/bin:$PATH"
+     cd 1-agy/agy_workspace
+     uv venv .venv --python 3.12 --seed
+     .venv/bin/pip install -r requirements.txt
+     ```
 
 2. **Or Run the Full Pre-Session Laptop Bootstrap (`utils/setup-laptops.sh`):**
    ```bash
