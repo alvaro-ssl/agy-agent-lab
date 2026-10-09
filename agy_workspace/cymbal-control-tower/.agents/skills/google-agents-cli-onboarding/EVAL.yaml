@@ -1,0 +1,69 @@
+cases:
+- id: "agents_cli_getting_started"
+  name: "agents_cli_getting_started"
+  prompt: "How do I get started with the Google agents-cli to build AI agents? What is the command to install it?"
+  metadata:
+    skill_name: "google-agents-cli-onboarding"
+    products:
+    - "Agent Platform"
+  rubric:
+  - "The response MUST provide the setup command using 'uvx google-agents-cli setup' or 'npx skills add google/agents-cli'."
+  - "The response MUST mention that this setup installs the CLI and enables specialized development skills in the coding agent."
+  - "The response MUST guide the user to verify the installation by running 'agents-cli info'."
+  - "The response MUST specify that the next step is initiating Phase 0 (Understand) by documenting requirements in '.agents-cli-spec.md'."
+  - "The response MUST NOT suggest installing via raw 'pip install google-agents-cli' as the primary method."
+
+- id: "agents_cli_development_lifecycle"
+  name: "agents_cli_development_lifecycle"
+  prompt: "I want to develop an AI agent using the ADK. What are the general phases of the development lifecycle, and what specialized skills will I use?"
+  metadata:
+    skill_name: "google-agents-cli-onboarding"
+    products:
+    - "Agent Platform"
+  rubric:
+  - "The response MUST outline the key phases of the ADK development lifecycle: Understand, Study, Scaffold, Build, Evaluate, Deploy, Publish, and Observe."
+  - "The response MUST map the lifecycle phases to their respective specialized skills (such as 'google-agents-cli-workflow' for Understand/Study, 'google-agents-cli-scaffold' for Scaffold, 'google-agents-cli-adk-code' for Build, etc.)."
+  - "The response MUST explain that these specialized skills become available and activate automatically in the coding agent after running setup."
+  - "The response MUST mention that the initial phase (Phase 0) starts with defining the agent spec in '.agents-cli-spec.md'."
+  - "The response MUST NOT direct the user to write code before completing Phase 0 (defining the spec)."
+
+- id: "agents_cli_scaffolding"
+  name: "agents_cli_scaffolding"
+  prompt: "How do I create a new agent project from a template using the agents-cli? What command do I run?"
+  metadata:
+    skill_name: "google-agents-cli-onboarding"
+    products:
+    - "Agent Platform"
+  rubric:
+  - "The response MUST present the command 'agents-cli scaffold <name>' to create a new project."
+  - "The response MUST specify that the scaffold command initializes the project structure, CI/CD, and infrastructure templates."
+  - "The response MUST associate this phase (Phase 2 - Scaffold) with the specialized skill 'google-agents-cli-scaffold'."
+  - "The response MUST state that this step occurs after executing setup and before writing custom agent logic."
+  - "The response MUST NOT recommend creating project files manually from scratch without using the scaffold command."
+
+- id: "agents_cli_evaluations"
+  name: "agents_cli_evaluations"
+  prompt: "How do I run evaluations on my agent once it's built? What commands are involved?"
+  metadata:
+    skill_name: "google-agents-cli-onboarding"
+    products:
+    - "Agent Platform"
+  rubric:
+  - "The response MUST mention the command 'agents-cli eval run' to run the agent over an evaluation dataset and grade the traces."
+  - "The response MUST associate this phase (Phase 4 - Evaluate) with the specialized skill 'google-agents-cli-eval'."
+  - "The response MUST explain that evaluations validate quality using a LLM-as-judge setup."
+  - "The response MUST NOT suggest using external non-ADK evaluation frameworks to test ADK agents."
+
+- id: "agents_cli_deployment"
+  name: "agents_cli_deployment"
+  prompt: "How do I deploy my agent to production and make it available in Gemini Enterprise?"
+  metadata:
+    skill_name: "google-agents-cli-onboarding"
+    products:
+    - "Agent Platform"
+  rubric:
+  - "The response MUST provide the command 'agents-cli deploy' to deploy the agent to Google Cloud."
+  - "The response MUST provide the command 'agents-cli publish gemini-enterprise' to register the agent."
+  - "The response MUST list target runtimes, including Agent Runtime (Vertex AI), Cloud Run, or GKE."
+  - "The response MUST associate these tasks with Phase 5 (Deploy) and Phase 6 (Publish) respectively."
+  - "The response MUST NOT recommend registering the agent before it is successfully deployed to a cloud runtime."

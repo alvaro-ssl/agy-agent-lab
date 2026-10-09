@@ -1,46 +1,61 @@
 # Track 1: AGY — Google Antigravity Exercises
 
-Welcome to **Track 1** of the CxO Leaders Exchange. This track focuses on developer and technical workflows using **Google Antigravity (AGY)**, agent orchestration, multi-agent swarms, and custom engineering skills.
+Welcome to **Track 1** of the CxO Leaders Exchange. This track focuses on executive-led autonomous engineering and production agent development using **Google Antigravity (AGY)**, built-in system slash commands (`/grill-me`, `/plan`, `/goal`, `/browser`, `/learn`, `/schedule`), multi-agent orchestration, and the **Google Agents CLI (`agents-cli` / ADK)** skills suite.
 
 ---
 
 ## Directory Structure
 
-```
+```text
 1-agy/
-├── README.md               # Track overview and getting started guide
-├── exercises/              # Hands-on Antigravity coding exercises & workflows
-├── skills/                 # Custom AGY skills, subagents, and tools
-└── data/                   # Input datasets, fixtures, and reference materials
+├── README.md                              # Track 1 overview and quick start guide
+├── agy_workspace/                         # Pre-configured Antigravity workspace for Play 1 & Play 2
+│   ├── .agents/                           # Workspace-wide AGY rules & 16 pre-installed skills
+│   │   ├── rules/                         # cymbal-governance.md & deploying.md guardrails
+│   │   └── skills/                        # google-agents-cli-*, enable-a2ui, executive-stress-test, etc.
+│   ├── cymbal-control-tower/              # Play 1: FastAPI + SQLite + JS Live Operations & SLA Control Tower
+│   │   ├── app.py                         # FastAPI service with seeded v1.4.0 regression for recovery
+│   │   ├── database.py                    # SQLite incident & credit ledger schema + EMEA seed data
+│   │   ├── dto_digital_twin.py            # 6-Layer Digital Twin of an Organization (DTO) & causal shock engine
+│   │   ├── enterprise_tools.py            # 6 ADK function tools (incidents, live ECB FX, €500 cap, DTO, web/Search)
+│   │   └── static/                        # Live executive telemetry dashboard (index.html, dashboard.js)
+│   └── autonomous-ops-agent/              # Play 2: ADK Production Agent & Evaluation Suite
+│       ├── app/agent.py                   # ADK agent wired with enterprise & DTO tools + sandbox simulation
+│       └── tests/eval/                    # Trajectory + LLM-as-Judge €500 governance evaluation suite
+└── utils/                                 # Workshop guides, laptop setup, and E2E verification
+    ├── WORKSHOP_GUIDE.md                  # Step-by-step Play 1 & Play 2 facilitator/participant guide
+    ├── lab-agy-gdoc.md                    # Full executive briefing & copy-paste prompt script
+    ├── project_brief.md                   # Cymbal EMEA Autonomous SLA & Incident War-Room Agent brief
+    ├── setup-laptops.sh                   # Pre-session laptop bootstrap (uv, APIs, skills, SQLite, git history)
+    ├── cymbal-control-tower.bundle        # Git bundle preserving the 2-commit v1.3.0 -> v1.4.0 regression history
+    └── test_workshop_e2e.py               # Automated E2E verification suite for Play 1 & Play 2
 ```
 
 ---
 
-## Track Overview
+## Two Connected Plays (45–60 Min Cap)
 
-Track 1 is tailored for technical leaders, architects, and engineers exploring agentic software engineering with the Google Antigravity SDK:
-- **Autonomous workflows:** Defining tasks with dynamic task lists, execution loops, and error-recovery routines.
-- **Multi-agent collaboration:** Orchestrating subagents and swarms communicating through shared workspaces.
-- **Tool integration & MCP:** Connecting agents with custom Model Context Protocol (MCP) servers, databases, and local tooling.
-- **Verification & Testing:** Enforcing strict evaluation, linting, and automated unit testing inside agent loops.
-
----
-
-## Getting Started
-
-1. **Prerequisites:**
-   - Python 3.11+
-   - Node.js / npm (if building MCP extensions or web harnesses)
-   - Access to Google Cloud / Vertex AI credentials
-
-2. **Exercises:**
-   - Browse the [`exercises/`](exercises/) directory for sequential hands-on scenarios.
-   - Run individual exercises per the instructions in each exercise folder.
-
-3. **Skills & Tooling:**
-   - Skills declared under [`skills/`](skills/) can be loaded into your Antigravity environment.
-   - Reference data fixtures can be found in [`data/`](data/).
+| Play | Focus | Working Directory | Key AGY Commands & Skills | Outcome |
+| :--- | :--- | :--- | :--- | :--- |
+| **Play 1 (15 Mins)** | **Antigravity Power Tips & Tricks — Command an Autonomous Engineering Team** | [`agy_workspace/cymbal-control-tower/`](agy_workspace/cymbal-control-tower/) | `/grill-me`, `/plan`, `/goal` (parallel subagents), `/browser`, `/learn`, `/schedule` | Diagnose a faulty `v1.4.0` release (`git diff HEAD~1..HEAD`), align on recovery via interactive question cards, fan out parallel backend/frontend subagents in a closed verification loop, verify in Chrome, and codify GDPR + €500 governance rules. |
+| **Play 2 (30 Mins)** | **Build a Production-Ready Agent with `agents-cli` & ADK** | [`agy_workspace/autonomous-ops-agent/`](agy_workspace/autonomous-ops-agent/) | `/google-agents-cli-scaffold`, `/google-agents-cli-adk-code`, `/google-agents-cli-eval`, `/enable-a2ui`, `/google-agents-cli-deploy`, `/record-demo` | Scaffold and test an ADK agent locally in the Playground (`http://localhost:8080`), run isolated Python sandbox SLA simulations & 6-Layer Digital Twin (DTO) causal shock propagation, enforce the €500 Board override guardrail via `agents-cli eval`, and render rich A2UI cards. |
 
 ---
 
-*(Exercises and modules being actively populated by the track lead).*
+## Quick Start
+
+1. **Bootstrap Presenter / Participant Laptop:**
+   ```bash
+   bash 1-agy/utils/setup-laptops.sh
+   ```
+   This ensures `uv` and `google-agents-cli` are installed, syncs `.agents/rules/` and `.agents/skills/`, initializes `cymbal_ops.db`, and restores the 2-commit Git history (`v1.3.0` → `v1.4.0`) inside `1-agy/agy_workspace/cymbal-control-tower/`.
+
+2. **Verify Everything End-to-End:**
+   ```bash
+   python3 1-agy/utils/test_workshop_e2e.py
+   ```
+
+3. **Run the Workshop:**
+   - Open [`1-agy/utils/WORKSHOP_GUIDE.md`](utils/WORKSHOP_GUIDE.md) or [`1-agy/utils/lab-agy-gdoc.md`](utils/lab-agy-gdoc.md) for the complete run-of-show and copy-paste prompts.
+   - For **Play 1**, open `1-agy/agy_workspace/cymbal-control-tower` in Antigravity (`AGY`).
+   - For **Play 2**, open `1-agy/agy_workspace` in Antigravity (`AGY`).
