@@ -1,0 +1,34 @@
+# Company profile for the digital twin generator.
+# Replace it with your own company (Play 2, Step 1), then run:  .venv/bin/python company-twin/generate_twin.py
+# Use rounded public figures. Never put real people's names here — leadership names are generated.
+
+company:
+  name: Altostrat
+  website: https://altostrat.example
+  industry: retail_consumer        # retail_consumer | telecom | financial_services | industrial_manufacturing | energy_utilities | software_saas
+  description: European omnichannel grocery and household retailer with stores, online delivery and own brands.
+  headquarters: Amsterdam, Netherlands
+  currency: EUR
+  annual_revenue_m: 4800          # last fiscal year, in millions of the currency above
+  employees: 21000
+  revenue_growth_target_pct: 5.0
+  ebitda_margin_target_pct: 7.5
+
+regions:                           # revenue share per region (should add up to ~1.0)
+  - {name: Netherlands, share: 0.34}
+  - {name: Germany, share: 0.26}
+  - {name: Belgium, share: 0.18}
+  - {name: France, share: 0.14}
+  - {name: Nordics, share: 0.08}
+
+business_units:                    # 2-5 units; products are the main product or service lines
+  - {name: Stores, revenue_share: 0.52, margin_pct: 31, products: [Grocery, Fresh food, Household]}
+  - {name: Online, revenue_share: 0.27, margin_pct: 26, products: [Home delivery, Click & collect, Marketplace]}
+  - {name: Own Brands, revenue_share: 0.21, margin_pct: 38, products: [Private-label food, Private-label home]}
+
+customer_segments: []              # optional: [{name, share, churn_monthly_pct, nps}] — industry defaults if empty
+
+strategic_priorities:
+  - Grow online to 35% of sales by 2028
+  - Protect margin against food inflation
+  - Halve delivery emissions per order

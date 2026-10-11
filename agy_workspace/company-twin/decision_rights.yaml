@@ -1,0 +1,75 @@
+# Decision rights for the company twin agent — what it may decide alone, and what needs a human.
+# Starting point for Play 2 Step 2: /grill-me interviews you and rewrites this file.
+#
+# mode:
+#   autonomous  — the agent acts on its own
+#   threshold   — autonomous up to `autonomous_up_to` (in `unit`); above that, `approver` must approve
+#   approval    — always needs `approver`
+#   forbidden   — the agent must never do this
+# approver is a leadership role (CEO, CFO, COO, CCO, CHRO, CTO); names come from the twin's leadership table.
+# unit: currency (amount of money), pct (absolute % change), count, or none.
+
+default:                       # any action not listed below
+  mode: approval
+  approver: CEO
+
+actions:
+  executive_alert:
+    description: Notify an executive about a signal, with the evidence and a recommendation.
+    mode: autonomous
+    unit: none
+
+  create_initiative:
+    description: Open an improvement initiative with an owner, a goal and a review date.
+    mode: autonomous
+    unit: none
+
+  retention_offer:
+    description: Fund a retention offer (credits, discounts, service upgrades) for a customer segment.
+    mode: threshold
+    unit: currency
+    autonomous_up_to: 50000
+    approver: CCO
+
+  price_change:
+    description: Change the list price of a product line (amount = % change, e.g. 2.5 or -1).
+    mode: threshold
+    unit: pct
+    autonomous_up_to: 1.0
+    approver: CCO
+
+  budget_reallocation:
+    description: Move operating budget between business units or functions.
+    mode: threshold
+    unit: currency
+    autonomous_up_to: 100000
+    approver: CFO
+
+  supplier_expedite:
+    description: Pay an existing supplier for expedited capacity or alternative logistics.
+    mode: threshold
+    unit: currency
+    autonomous_up_to: 250000
+    approver: COO
+
+  supplier_switch:
+    description: Move volume from one supplier to another.
+    mode: approval
+    unit: none
+    approver: COO
+
+  hiring_requisition:
+    description: Open new roles in an organisation unit (amount = number of roles).
+    mode: approval
+    unit: count
+    approver: CHRO
+
+  workforce_reduction:
+    description: Redundancies, layoffs or reduced hours.
+    mode: forbidden
+    unit: count
+
+  external_communication:
+    description: Statements to customers, press, investors or regulators.
+    mode: forbidden
+    unit: none

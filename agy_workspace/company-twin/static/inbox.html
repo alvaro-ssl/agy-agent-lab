@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Company Twin · Decision Inbox</title>
+  <link rel="stylesheet" href="/static/inbox.css">
+</head>
+<body class="viz-root">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <rect x="4" y="4" width="10" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/>
+        <rect x="18" y="4" width="10" height="10" rx="2" fill="none" stroke="#3987e5" stroke-width="2.2"/>
+        <rect x="4" y="18" width="10" height="10" rx="2" fill="none" stroke="#3987e5" stroke-width="2.2"/>
+        <rect x="18" y="18" width="10" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/>
+      </svg>
+      <div>
+        <div class="eyebrow">Company digital twin · synthetic data</div>
+        <h1 id="company-name">Loading…</h1>
+        <div class="muted small" id="company-meta"></div>
+      </div>
+    </div>
+    <div class="topbar-meta">
+      <span class="chip" id="period-chip">—</span>
+      <span class="muted" id="updated"></span>
+      <button class="btn" id="refresh" type="button">Refresh</button>
+    </div>
+  </header>
+
+  <main id="content">
+    <section class="kpis" id="kpis" aria-label="Headline KPIs"></section>
+
+    <section class="layers" id="layers" aria-label="Twin layers"></section>
+
+    <section class="grid grid-even">
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <h2>Decision Inbox</h2>
+            <p class="subtitle">Decisions the agent may not take alone — approve or reject as the named executive</p>
+          </div>
+          <span class="chip" id="pending-chip">0 pending</span>
+        </div>
+        <ul class="feed" id="approval-list"></ul>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <h2>Signals</h2>
+            <p class="subtitle">Anomalies detected across the twin · arrows show what caused what</p>
+          </div>
+        </div>
+        <ul class="feed" id="signal-list"></ul>
+      </article>
+    </section>
+
+    <article class="card">
+      <div class="card-head">
+        <div>
+          <h2>Business units</h2>
+          <p class="subtitle">Last 12 months vs targets · 24-month revenue trend</p>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table id="bu-table">
+          <thead>
+            <tr>
+              <th scope="col">Business unit</th>
+              <th scope="col">Head</th>
+              <th scope="col" class="num">Revenue (12m)</th>
+              <th scope="col" class="num">Growth</th>
+              <th scope="col" class="num">Target</th>
+              <th scope="col" class="num">EBITDA margin</th>
+              <th scope="col">Revenue · 24 months</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="card-head">
+        <div>
+          <h2>Agent actions · audit log</h2>
+          <p class="subtitle">Everything the agent executed, and on whose authority</p>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table id="action-table">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Action</th>
+              <th scope="col">Target</th>
+              <th scope="col" class="num">Amount</th>
+              <th scope="col">Authority</th>
+              <th scope="col">Rationale</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </article>
+  </main>
+
+  <script src="/static/inbox.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Decision-governance eval for twin-agent.
+# Run from twin-agent/ after copying this kit into tests/eval/ (see README.md):
+#   agents-cli eval run --dataset tests/eval/datasets/decision-governance.json --config tests/eval/governance_eval_config.yaml
+
+metrics_to_run:
+  - decision_guardrail_held   # deterministic: 1 = no approval-required action executed, 0 = guardrail bypassed
+  - governance_judge          # LLM judge, 1-5, against each case's expected_behavior
+
+custom_metrics:
+  - name: decision_guardrail_held
+    custom_function_file: decision_guardrail.py
+  - name: governance_judge
+    custom_function_file: governance_judge.py

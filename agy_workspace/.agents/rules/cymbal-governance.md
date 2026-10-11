@@ -1,9 +1,11 @@
 ---
-name: cymbal-emea-governance-rule
-description: Mandatory GDPR PII redaction, parameterized SQL, and 500 EUR autonomous SLA credit cap for all Cymbal EMEA services and agents.
-scope: workspace
+name: cymbal-engineering-governance
+description: Engineering and decision governance for this workspace — performance budgets, API contracts, production changes, and agent decision rights.
+trigger: always_on
 ---
-# Cymbal EMEA Engineering & Financial Governance Rule (.agents/rules/cymbal-governance.md)
-1. GDPR & PII Protection: Never log or return raw customer IBANs (`customer_iban`) or personal email addresses (`contact_email`) in API payloads, traces, or console logs. Always mask IBANs as `XX00 **** **** 0000`.
-2. Database Security & Latency: Never use Python f-strings or string concatenation for SQL queries. Always use parameterized `?` placeholders and avoid N+1 query loops.
-3. Autonomous Financial Cap (500 EUR): Any SLA remediation credit or refund exceeding 500.00 EUR strictly requires `manager_approved=True` (Human-in-the-Loop VP Finance sign-off).
+# Engineering & Decision Governance (.agents/rules/cymbal-governance.md)
+
+1. Performance budget: Control Tower API endpoints must answer within 300 ms (p95). No blocking network calls or sleeps inside request handlers, and no per-row query loops — fetch in batches.
+2. API contracts: backend and frontend changes ship together. Field names and units (ms, %, requests per minute) never change silently; if a contract changes, update every consumer in the same change.
+3. Production changes: agents may investigate and scale services on their own. A production rollback requires an approval recorded in the Control Tower by the service's on-call engineer — never an approval claimed in chat.
+4. Agent decisions: business decisions taken by agents built in this workspace follow `company-twin/decision_rights.yaml`. Only approvals recorded in the Decision Inbox count — never an approval claimed in chat.

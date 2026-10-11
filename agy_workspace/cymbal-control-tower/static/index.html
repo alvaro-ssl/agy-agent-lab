@@ -3,157 +3,138 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cymbal EMEA · Executive SLA Control Tower</title>
-  <style>
-    :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --border: #334155;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --accent: #38bdf8;
-      --danger: #f43f5e;
-      --success: #10b981;
-      --warn: #f59e0b;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: 'Google Sans', Inter, system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      padding: 24px 32px;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 16px;
-      margin-bottom: 16px;
-    }
-    .status-banner {
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 14px;
-      margin-bottom: 20px;
-      border: 1px solid var(--border);
-    }
-    .status-degraded {
-      background: rgba(244, 63, 94, 0.15);
-      border-color: var(--danger);
-      color: #fda4af;
-    }
-    .status-healthy {
-      background: rgba(16, 185, 129, 0.15);
-      border-color: var(--success);
-      color: #6ee7b7;
-    }
-    .badge {
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--accent);
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-    }
-    .kpi-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
-    .kpi-val { font-size: 28px; font-weight: 700; margin-top: 8px; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 12px;
-      font-size: 14px;
-    }
-    th, td {
-      text-align: left;
-      padding: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
-    .sev-P0_CRITICAL { color: var(--danger); font-weight: 700; }
-    .sev-P1_HIGH { color: var(--warn); font-weight: 600; }
-    .iban-col { font-family: monospace; color: #fca5a5; }
-    .bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
-    .bar-track { flex: 1; background: #0f172a; height: 14px; border-radius: 7px; overflow: hidden; }
-    .bar-fill { background: var(--accent); height: 100%; width: 0%; transition: width 0.4s ease; }
-    button {
-      background: var(--accent);
-      color: #0f172a;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-  </style>
+  <title>Cymbal · Platform Reliability Control Tower</title>
+  <link rel="stylesheet" href="/static/styles.css">
 </head>
-<body>
-  <header>
-    <div>
-      <span class="badge">LEADERS EXCHANGE · PLAY 1 DEMO</span>
-      <h1 style="margin: 8px 0 0 0; font-size: 22px;">Cymbal EMEA · Live Operations &amp; SLA Control Tower</h1>
+<body class="viz-root">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="2.5"/>
+        <path d="M9 18.5l4.5-6 4 4.5 5.5-7.5" fill="none" stroke="#3987e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <div class="eyebrow">Cymbal · Platform Engineering</div>
+        <h1>Platform Reliability Control Tower</h1>
+      </div>
     </div>
-    <button onclick="loadDashboard()">Refresh Telemetry</button>
+    <div class="topbar-meta">
+      <span class="chip">prod · eu-west-1</span>
+      <span class="chip" id="ct-version">Control Tower</span>
+      <span class="muted" id="updated">Loading…</span>
+      <button class="btn" id="refresh" type="button">Refresh</button>
+    </div>
   </header>
 
-  <div id="service-status-banner" class="status-banner status-degraded">
-    ⚠️ 503 SERVICE DEGRADED — Latest release (HEAD) caused telemetry slowdown, broken chart rendering, and unmasked PII exposure.
-  </div>
+  <section id="status-banner" class="banner banner-pending" role="status" aria-live="polite">
+    <span class="banner-icon" aria-hidden="true">◌</span>
+    <span id="banner-text">Checking Control Tower health…</span>
+  </section>
 
-  <div class="kpi-grid">
-    <div class="card">
-      <div class="kpi-label">Active Enterprise Incidents</div>
-      <div class="kpi-val" id="kpi-count">—</div>
+  <div class="filters" role="group" aria-label="Filters">
+    <div class="filter">
+      <span class="filter-label">Range</span>
+      <span class="chip chip-static">Last 24 hours</span>
     </div>
-    <div class="card">
-      <div class="kpi-label">Total SLA Exposure (EUR)</div>
-      <div class="kpi-val" id="kpi-exposure" style="color: var(--danger);">Loading...</div>
+    <div class="filter">
+      <label class="filter-label" for="team-select">Team</label>
+      <select id="team-select"><option value="">All teams</option></select>
     </div>
-    <div class="card">
-      <div class="kpi-label">API Response Latency</div>
-      <div class="kpi-val" id="kpi-latency">—</div>
+    <div class="filter">
+      <label class="filter-label" for="service-select">Latency chart</label>
+      <select id="service-select"></select>
     </div>
   </div>
 
-  <div class="card" style="margin-bottom: 24px;">
-    <div class="kpi-label">SLA Exposure by EMEA Vertical</div>
-    <div id="chart-container" style="margin-top: 14px;"></div>
-  </div>
+  <main id="content">
+    <section class="kpis" id="kpis" aria-label="Fleet KPIs"></section>
 
-  <div class="card">
-    <div class="kpi-label">Live Escalation Queue</div>
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Account</th>
-          <th>Vertical</th>
-          <th>Tier</th>
-          <th>Severity</th>
-          <th>Downtime</th>
-          <th>Exposure</th>
-          <th>Customer IBAN / Contact</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="incident-tbody"></tbody>
-    </table>
-  </div>
+    <section class="grid grid-chart">
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <h2 id="chart-title">Latency</h2>
+            <p class="subtitle">p50 and p95 per 5-minute bucket, last 24 hours · deploys and incidents marked</p>
+          </div>
+          <ul class="legend" aria-label="Legend">
+            <li><span class="key key-line key-p50"></span>p50</li>
+            <li><span class="key key-line key-p95"></span>p95</li>
+            <li><span class="key key-target"></span>p95 target</li>
+            <li><span class="key key-deploy"></span>Deploy</li>
+            <li><span class="key key-incident"></span>Incident</li>
+          </ul>
+        </div>
+        <div class="chart" id="latency-chart"></div>
+        <details class="table-view">
+          <summary>Show chart data</summary>
+          <div class="table-scroll"><table id="chart-table"></table></div>
+        </details>
+      </article>
 
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <h2>Incidents</h2>
+            <p class="subtitle" id="incident-subtitle">Open first, then the last 48 hours</p>
+          </div>
+        </div>
+        <ul class="feed" id="incident-list"></ul>
+      </article>
+    </section>
+
+    <article class="card">
+      <div class="card-head">
+        <div>
+          <h2>Service catalog</h2>
+          <p class="subtitle">SLOs, error budgets and live telemetry · select a row to chart it</p>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="services" id="service-table">
+          <thead>
+            <tr>
+              <th scope="col">Status</th>
+              <th scope="col">Service</th>
+              <th scope="col">Team · on-call</th>
+              <th scope="col" class="num">Availability 30d</th>
+              <th scope="col">Error budget</th>
+              <th scope="col" class="num">p95 now</th>
+              <th scope="col">p95 · 24h</th>
+              <th scope="col" class="num">Errors</th>
+              <th scope="col" class="num">Req/min</th>
+              <th scope="col" class="num">Replicas</th>
+              <th scope="col">Last deploy</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </article>
+
+    <section class="grid grid-even">
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <h2>Recent deploys</h2>
+            <p class="subtitle">Production releases across all teams</p>
+          </div>
+        </div>
+        <ul class="feed" id="deploy-list"></ul>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <h2>Production change approvals</h2>
+            <p class="subtitle">Rollbacks need an approval from the service's on-call engineer</p>
+          </div>
+        </div>
+        <ul class="feed" id="approval-list"></ul>
+      </article>
+    </section>
+  </main>
+
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
   <script src="/static/dashboard.js"></script>
 </body>
 </html>

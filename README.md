@@ -1,81 +1,84 @@
 # Track 1: AGY — Google Antigravity Exercises
 
-Welcome to **Track 1** of the CxO Leaders Exchange. This track focuses on executive-led autonomous engineering and production agent development using **Google Antigravity (AGY)**, built-in system slash commands (`/grill-me`, `/plan`, `/goal`, `/browser`, `/learn`, `/schedule`), multi-agent orchestration, and the **Google Agents CLI (`agents-cli` / ADK)** skills suite.
+Welcome to **Track 1** of the CxO Leaders Exchange. Technical leaders direct autonomous engineering agents in **Google Antigravity (AGY)** — `/browser`, `/grill-me`, `/plan`, `/goal`, `/learn`, `/schedule` — and then build, red-team and govern a production operations agent with the **Google Agents CLI (`agents-cli` / ADK)** skills.
+
+The two plays are independent:
+- **Play 1** — Cymbal's **Platform Reliability Control Tower**, the internal dashboard leadership uses for the Monday ops review, broken by Friday's v1.4.0 release.
+- **Play 2** — a synthetic, 8-layer **digital twin of the participant's own company**, and an autonomous agent built with `agents-cli` that analyses it and takes decisions, some alone and some only with an executive's approval.
 
 ---
 
 ## Directory Structure
 
 > [!IMPORTANT]
-> - **`agy_workspace/`** is the participant workspace that **must be placed in each user's local directory** for the hands-on exercise.
-> - **`utils/`** is **only needed for facilitator setup, documentation, and testing the exercise** (participants do not need `utils/` in their active workspace).
+> - **`agy_workspace/`** is the participant workspace. Copy it to each participant's laptop and **open this folder in Antigravity for both plays** (that is what loads the workspace rules and skills).
+> - **`utils/`** is for facilitators only: setup, documentation, testing and the answer key.
 
 ```text
 1-agy/
-├── README.md                              # Track 1 overview and quick start guide
-├── agy_workspace/                         # REQUIRED in each user's local directory (Play 1 & Play 2 workspace)
-│   ├── requirements.txt                   # Consolidated Python dependencies (fastapi, uvicorn, google-adk, google-genai, requests)
-│   ├── .agents/                           # Workspace-wide AGY rules & 16 pre-installed skills
-│   │   ├── rules/                         # cymbal-governance.md & deploying.md guardrails
-│   │   └── skills/                        # google-agents-cli-*, enable-a2ui, executive-stress-test, etc.
-│   ├── cymbal-control-tower/              # Play 1: FastAPI + SQLite + JS Live Operations & SLA Control Tower
-│   │   ├── app.py                         # FastAPI service with seeded v1.4.0 regression for recovery
-│   │   ├── database.py                    # SQLite incident & credit ledger schema + EMEA seed data
-│   │   ├── dto_digital_twin.py            # 6-Layer Digital Twin of an Organization (DTO) & causal shock engine
-│   │   ├── enterprise_tools.py            # 6 ADK function tools (incidents, live ECB FX, €500 cap, DTO, web/Search)
-│   │   └── static/                        # Live executive telemetry dashboard (index.html, dashboard.js)
-│   └── autonomous-ops-agent/              # Play 2: ADK Production Agent & Evaluation Suite
-│       ├── app/agent.py                   # ADK agent wired with enterprise & DTO tools + sandbox simulation
-│       └── tests/eval/                    # Trajectory + LLM-as-Judge €500 governance evaluation suite
-└── utils/                                 # ONLY needed for testing & facilitator setup (not required by users)
-    ├── WORKSHOP_GUIDE.md                  # Step-by-step Play 1 & Play 2 facilitator/participant guide
-    ├── lab-agy-gdoc.md                    # Full executive briefing & copy-paste prompt script
-    ├── project_brief.md                   # Cymbal EMEA Autonomous SLA & Incident War-Room Agent brief
-    ├── setup-laptops.sh                   # Pre-session laptop bootstrap (uv, .venv, APIs, skills, SQLite, git history)
-    ├── cymbal-control-tower.bundle        # Git bundle preserving the 2-commit v1.3.0 -> v1.4.0 regression history
-    └── test_workshop_e2e.py               # Automated E2E verification suite for Play 1 & Play 2
+├── README.md                              # This file
+├── agy_workspace/                         # OPEN THIS FOLDER IN ANTIGRAVITY (Play 1 & Play 2)
+│   ├── AGENTS.md                          # How to run, test and reset both plays (read by Antigravity)
+│   ├── requirements.txt                   # Python dependencies (fastapi, uvicorn, google-adk, google-genai, ...)
+│   ├── .agents/
+│   │   ├── rules/                         # cymbal-governance.md (performance, API contracts, rollbacks), deploying.md
+│   │   └── skills/                        # browser (custom), google-agents-cli-*, enable-a2ui, record-demo, review, ...
+│   ├── cymbal-control-tower/              # Play 1: the Control Tower — own git repo, v1.3.0 (healthy) -> v1.4.0 (broken)
+│   │   ├── app.py                         # FastAPI API
+│   │   ├── database.py                    # SQLite schema + deterministic seed: 12 services, telemetry, incidents, deploys
+│   │   ├── static/                        # Dashboard (index.html, styles.css, dashboard.js)
+│   │   ├── tests/test_smoke.py            # The release pipeline's smoke tests (they pass on v1.4.0)
+│   │   └── CHANGELOG.md                   # Release notes — context for the /grill-me trade-offs
+│   ├── company-twin/                      # Play 2: the company digital twin
+│   │   ├── company_profile.yaml           # The company the twin represents — reshaped to each participant's company
+│   │   ├── generate_twin.py, archetypes.py# Builds the 8-layer twin (SQLite + CSVs + summary) for 6 industries
+│   │   ├── decision_rights.yaml           # What the agent may decide alone / with which executive / never
+│   │   ├── twin_tools.py                  # Agent tools: analyse, simulate, act (with human approvals)
+│   │   └── inbox_app.py, static/          # Company Twin overview + Decision Inbox on :8090
+│   └── eval-kit/                          # Play 2 Track B: decision-governance eval (5 cases + deterministic metric)
+└── utils/                                 # Facilitators only
+    ├── lab-agy-gdoc.md                    # Executive briefing & copy-paste prompts for both plays
+    ├── WORKSHOP_GUIDE.md                  # Run of show, timings and facilitator notes
+    ├── project_brief.md                   # Brief for the Play 2 company analyst agent
+    ├── setup-laptops.sh                   # Pre-session laptop setup (uv, .venv, agents-cli, skills, DB, git history)
+    ├── cymbal-control-tower.bundle        # Git bundle with the v1.3.0 -> v1.4.0 history
+    ├── run_agy_lab.sh                     # Runs every prompt in one Antigravity session on a throwaway copy
+    ├── test_workshop_e2e.py               # Verifies the exercise is intact
+    └── reference/                         # Answer keys, reference agent, example spec, Track B fix, screenshots
 ```
 
 ---
 
 ## Two Connected Plays (45–60 Min Cap)
 
-| Play | Focus | Working Directory | Key AGY Commands & Skills | Outcome |
-| :--- | :--- | :--- | :--- | :--- |
-| **Play 1 (15 Mins)** | **Antigravity Power Tips & Tricks — Command an Autonomous Engineering Team** | [`agy_workspace/cymbal-control-tower/`](agy_workspace/cymbal-control-tower/) | `/grill-me`, `/plan`, `/goal` (parallel subagents), `/browser`, `/learn`, `/schedule` | Diagnose a faulty `v1.4.0` release (`git diff HEAD~1..HEAD`), align on recovery via interactive question cards, fan out parallel backend/frontend subagents in a closed verification loop, verify in Chrome, and codify GDPR + €500 governance rules. |
-| **Play 2 (30 Mins)** | **Build a Production-Ready Agent with `agents-cli` & ADK** | [`agy_workspace/autonomous-ops-agent/`](agy_workspace/autonomous-ops-agent/) | `/google-agents-cli-scaffold`, `/google-agents-cli-adk-code`, `/google-agents-cli-eval`, `/enable-a2ui`, `/google-agents-cli-deploy`, `/record-demo` | Scaffold and test an ADK agent locally in the Playground (`http://localhost:8080`), run isolated Python sandbox SLA simulations & 6-Layer Digital Twin (DTO) causal shock propagation, enforce the €500 Board override guardrail via `agents-cli eval`, and render rich A2UI cards. |
+| Play | Focus | Key commands & skills | Outcome |
+| :--- | :--- | :--- | :--- |
+| **Play 1 (15–20 min)** | **Command an autonomous engineering team** | `/browser`, `/grill-me`, `/plan`, `/goal` (parallel subagents), `/learn`, `/schedule` | See the broken dashboard, make the leadership trade-offs (roll back vs fix forward), get a plan, approve it into parallel backend/frontend subagents, verify with a real-browser screenshot, codify a release gate and watch it hold, schedule a CTO briefing. |
+| **Play 2 (30 min)** | **An autonomous agent that runs your company's digital twin** | research + `/browser`, `/grill-me`, "Use agents-cli to build…" (workflow + scaffold), `/google-agents-cli-eval`, `/enable-a2ui`, `/record-demo` | Reshape the twin into your company, agree the agent's decision rights, build it with one sentence, let it find the root cause and act — alone where allowed, through the Decision Inbox where not — then red-team the human approvals and enforce them in code. |
 
 ---
 
 ## Quick Start
 
-1. **Create the Local Virtualenv & Install Dependencies (inside `agy_workspace/`):**
-   - **If `python3` (3.11+) is already installed:**
-     ```bash
-     cd 1-agy/agy_workspace
-     python3 -m venv .venv
-     .venv/bin/pip install -r requirements.txt
-     ```
-   - **If `python3` is NOT installed (or is older than 3.11 on macOS), use `uv` to auto-download standalone Python 3.12:**
-     ```bash
-     curl -LsSf https://astral.sh/uv/install.sh | sh && export PATH="$HOME/.local/bin:$PATH"
-     cd 1-agy/agy_workspace
-     uv venv .venv --python 3.12 --seed
-     .venv/bin/pip install -r requirements.txt
-     ```
-
-2. **Or Run the Full Pre-Session Laptop Bootstrap (`utils/setup-laptops.sh`):**
+1. **Set up each laptop** (creates `agy_workspace/.venv`, installs dependencies and `agents-cli`, installs skills, seeds the Control Tower and restores its git history, generates the default company twin, checks for Chrome):
    ```bash
    bash 1-agy/utils/setup-laptops.sh
    ```
-   This automatically creates `1-agy/agy_workspace/.venv`, installs all dependencies (`requirements.txt`), ensures `uv` and `google-agents-cli` are installed, syncs `.agents/rules/` and `.agents/skills/`, initializes `cymbal_ops.db`, and restores the 2-commit Git history (`v1.3.0` → `v1.4.0`) inside `1-agy/agy_workspace/cymbal-control-tower/`.
-
-3. **Verify Everything End-to-End (Testing Only):**
+   Or just the Python environment:
    ```bash
-   python3 1-agy/utils/test_workshop_e2e.py
+   cd 1-agy/agy_workspace
+   uv venv .venv --python 3.12 --seed      # or: python3 -m venv .venv  (Python 3.11-3.13)
+   .venv/bin/pip install -r requirements.txt
    ```
 
-4. **Run the Workshop:**
-   - Open [`1-agy/utils/WORKSHOP_GUIDE.md`](utils/WORKSHOP_GUIDE.md) or [`1-agy/utils/lab-agy-gdoc.md`](utils/lab-agy-gdoc.md) for the complete run-of-show and copy-paste prompts.
-   - For **Play 1**, open `1-agy/agy_workspace/cymbal-control-tower` in Antigravity (`AGY`).
-   - For **Play 2**, open `1-agy/agy_workspace` in Antigravity (`AGY`).
+2. **Verify the exercise** (runs on a temporary copy; never modifies `agy_workspace/`):
+   ```bash
+   1-agy/agy_workspace/.venv/bin/python 1-agy/utils/test_workshop_e2e.py
+   ```
+
+3. **Rehearse it with Antigravity** (every prompt, one session, throwaway copy):
+   ```bash
+   bash 1-agy/utils/run_agy_lab.sh --play=1        # or: --play=2 --company="Siemens"
+   ```
+
+4. **Run the workshop:** open `1-agy/agy_workspace` in Antigravity and follow [`utils/lab-agy-gdoc.md`](utils/lab-agy-gdoc.md). Facilitator notes and timings are in [`utils/WORKSHOP_GUIDE.md`](utils/WORKSHOP_GUIDE.md); the answer key is in [`utils/reference/README.md`](utils/reference/README.md).

@@ -1,30 +1,32 @@
 ---
 name: executive-stress-test
 description: >-
-  Multi-perspective executive architecture stress-test skill for Antigravity (AGY).
-  Spawns parallel subagents (CTO Latency & Resilience lens, CISO & GDPR DPO lens,
-  CFO Financial Governance lens) via invoke_subagent and synthesizes a unified,
-  zero-regression remediation blueprint. Use when the user invokes /executive-stress-test
-  or asks to stress-test an architecture from multiple executive perspectives.
+  Multi-perspective stress test of a system, release or plan. Spawns parallel read-only subagents that each
+  take an executive lens (CTO: performance and resilience, CISO: security and trust, COO/CFO: operational and
+  business risk) and synthesises one prioritised blueprint. Use when the user invokes /executive-stress-test
+  or asks to stress-test something from several leadership perspectives before acting.
 ---
 
-# Executive Multi-Perspective Stress-Test Skill (`/executive-stress-test`)
+# Executive multi-perspective stress test (`/executive-stress-test`)
 
-When activated, stress-test the target system architecture in parallel from multiple executive viewpoints before writing production code.
+## 1. Fan out (one tool call, parallel, read-only)
 
-## Workflow
+Use `invoke_subagent` to launch three concurrent read-only subagents on the target the user named:
 
-1. **Launch Parallel Perspective Subagents (`invoke_subagent`)**:
-   Call `invoke_subagent` in a **single tool call** with three concurrent `research` (or `self` read-only) subagents:
-   - **Subagent 1 (`Role: "CTO Performance & Resilience Architect"`)**:
-     Audit database queries, request latency bottlenecks (`time.sleep`, $N+1$ SQLite loops), numerical aggregation accuracy, and frontend rendering resilience. Propose concrete $<50\text{ms}$ query and UI fixes.
-   - **Subagent 2 (`Role: "CISO & GDPR Data Protection Officer"`)**:
-     Audit SQL injection surfaces, hardcoded secrets (`sk_live_...`), and EU customer PII exposure (`customer_iban`, `contact_email`) across API responses and logs. Propose parameterized SQL and deterministic PII masking helpers (`mask_iban`, `mask_email`).
-   - **Subagent 3 (`Role: "CFO Financial Controls Auditor"`)**:
-     Audit autonomous financial actions (`/api/remediate` and `credit_ledger`) against the €500 autonomous SLA credit cap. Define the exact HTTP 403 / `PENDING_EXECUTIVE_APPROVAL` guardrail contract when `credit_eur > 500` and `manager_approved` is false.
+- **CTO — performance & resilience**: latency, scalability, failure modes, whether monitoring and health
+  checks would actually detect a problem, and what the rollback path is.
+- **CISO — security & trust**: secrets, input handling, access to production actions, what an agent or user
+  could do that they should not.
+- **COO/CFO — operations & business risk**: customer and revenue impact, on-call load, change-management and
+  approval rules in `.agents/rules/`, and what leadership would need to sign off.
 
-2. **Synthesize the Executive Blueprint**:
-   Once all three subagents report back, synthesize their findings into a concise, prioritized **Zero-Regression Execution Blueprint** with:
-   - **Executive Risk Matrix** (CTO / CISO & DPO / CFO findings)
-   - **File-by-File Remediation Contract** (`app.py`, `static/dashboard.js`)
-   - **Verification & Acceptance Criteria** (`test_workshop_e2e.py`)
+Each subagent returns evidence-backed findings (file and line, or a reproducible observation) with severity.
+
+## 2. Synthesise
+
+Merge the three reports into one **blueprint**:
+
+1. **Risk matrix** — one row per finding: lens, severity, evidence, business impact.
+2. **Decisions for leadership** — the trade-offs that need a human call, each with the options and their
+   consequences (no recommended option unless the user asks for one).
+3. **Remediation plan** — file-by-file or step-by-step, with the verification that proves each fix.
