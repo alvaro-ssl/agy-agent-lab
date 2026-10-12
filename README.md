@@ -60,6 +60,15 @@ The two plays are independent:
 
 ## Quick Start
 
+Laptops are set up before the session. Minimal setup, for reference:
+
+```bash
+uv tool install "google-agents-cli~=1.7.0" && agents-cli setup
+cd 1-agy/agy_workspace
+uv venv .venv --python 3.12 --seed && .venv/bin/pip install -r requirements.txt
+.venv/bin/python company-twin/generate_twin.py
+```
+
 1. **Set up each laptop** (creates `agy_workspace/.venv`, installs dependencies, installs `agents-cli` 1.7.x and its skills, seeds the Control Tower and restores its git history, generates the default company twin, checks for Chrome):
    ```bash
    bash 1-agy/utils/setup-laptops.sh
