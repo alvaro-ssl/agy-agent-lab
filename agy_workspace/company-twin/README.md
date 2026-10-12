@@ -14,16 +14,16 @@ decision_rights.yaml ──▶ twin_tools.py ◀────────┘ ─�
 
 | Layer | Tables |
 | --- | --- |
-| 1 Strategy & objectives | `company`, `business_units`, `objectives`, `leadership`, `regions` |
+| 1 Strategy & objectives | `company`, `business_units`, `objectives`, `leadership`, `regions`, `market_landscape` |
 | 2 Organisation & people | `org_units` |
-| 3 Customers & market | `customer_segments` |
+| 3 Customers & market | `customer_segments`, `accounts` (key accounts, SLA terms, multi-currency), `friction_points` |
 | 4 Products & services | `product_lines` |
-| 5 Operations & processes | `processes` |
-| 6 Supply chain & assets | `suppliers`, `sites` |
-| 7 Finance | `monthly_financials` (24 months, budget vs actual) |
-| 8 Risk & governance | `risks`, `policies` |
+| 5 Operations & processes | `processes`, `work_queue`, `incidents`, `systems` |
+| 6 Supply chain & assets | `suppliers`, `sites`, `dependencies` |
+| 7 Finance | `monthly_financials` (24 months, budget vs actual), `fx_rates`, `cost_rates` |
+| 8 Risk & governance | `risks`, `policies`, `buffers`, `mitigation_playbooks` |
 | History & anomalies | `monthly_kpis` (24 months, long format), `signals` |
-| Decisions | `approvals`, `actions_log` |
+| Decisions | `approvals`, `actions_log`, `reports` |
 
 Industries: `retail_consumer`, `telecom`, `financial_services`, `industrial_manufacturing`, `energy_utilities`,
 `software_saas` (see `archetypes.py`). The same profile always produces the same twin. Leadership and manager

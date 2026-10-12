@@ -9,12 +9,14 @@ Run:  .venv/bin/uvicorn inbox_app:app --app-dir company-twin --port 8090
 from __future__ import annotations
 
 import sqlite3
+
+import yaml
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
 HERE = Path(__file__).resolve().parent
@@ -68,16 +70,23 @@ def overview() -> dict[str, Any]:
     customers = sum(s["customers"] for s in segments)
     churn = sum(s["churn_monthly_pct"] * s["customers"] for s in segments) / customers
     headcount = sum(o["headcount"] for o in org)
+    accounts = rows("SELECT * FROM accounts")
+    at_risk = [a for a in accounts if a["renewal_in_days"] <= 60 and a["sla_hours_in_breach"] > 0]
+    systems = rows("SELECT * FROM systems")
+    fx = {r["currency"]: r["units_per_base"] for r in rows("SELECT currency, units_per_base FROM fx_rates WHERE month = (SELECT MAX(month) FROM fx_rates)")}
+    burn = sum(a["sla_penalty_per_hour"] / fx.get(a["currency"], 1) for a in accounts if a["sla_hours_in_breach"] > 0)
+    breaching_buffers = [b for b in rows("SELECT * FROM buffers") if b["days_to_breach"] is not None and b["days_to_breach"] <= 30]
     layers = [
-        {"layer": "Strategy & objectives", "metric": f"{sum(o['status'] == 'at risk' for o in objectives)} of {len(objectives)} targets at risk"},
+        {"layer": "Strategy & objectives", "metric": f"{sum(o['status'] == 'at risk' for o in objectives)} of {len(objectives)} targets at risk · {len(rows('SELECT 1 FROM market_landscape'))} market plays mapped"},
         {"layer": "Organisation & people", "metric": f"{headcount:,} people · {sum(o['open_roles'] for o in org)} open roles"},
-        {"layer": "Customers & market", "metric": f"{customers:,} customers · {churn:.2f}% monthly churn"},
+        {"layer": "Customers & market", "metric": f"{customers:,} customers · {len(accounts)} key accounts · {len(at_risk)} renewals at risk"},
         {"layer": "Products & services", "metric": f"{len(rows('SELECT 1 FROM product_lines'))} product lines"},
-        {"layer": "Operations & processes", "metric": f"{len(procs)} processes · worst SLA {min(p['current_sla_attainment_pct'] for p in procs):.1f}%"},
+        {"layer": "Operations & processes", "metric": f"{len(procs)} processes · worst SLA {min(p['current_sla_attainment_pct'] for p in procs):.1f}% · {sum(s['single_point_of_failure'] for s in systems)} single point of failure"},
         {"layer": "Supply chain & assets", "metric": f"{len(sups)} suppliers · {sum(s['risk_score'] >= 60 for s in sups)} high risk · {len(rows('SELECT 1 FROM sites'))} sites"},
-        {"layer": "Finance", "metric": f"EBITDA margin {100 * ebitda / rev:.1f}% vs {company['ebitda_margin_target_pct']}% target"},
-        {"layer": "Risk & governance", "metric": f"{len(rows('SELECT 1 FROM risks'))} risks · {len(rows('SELECT 1 FROM policies'))} policies"},
+        {"layer": "Finance", "metric": f"EBITDA margin {100 * ebitda / rev:.1f}% vs {company['ebitda_margin_target_pct']}% · SLA penalties {company['currency']} {burn:,.0f}/h"},
+        {"layer": "Risk & governance", "metric": f"{len(rows('SELECT 1 FROM risks'))} risks · {len(breaching_buffers)} buffers breach within 30 days"},
     ]
+    rights = yaml.safe_load((HERE / "decision_rights.yaml").read_text())
     return {
         "company": company,
         "period": {"first": months[0], "last": months[-1]},
@@ -91,6 +100,7 @@ def overview() -> dict[str, Any]:
         "business_units": bus,
         "signals": rows("SELECT * FROM signals ORDER BY severity = 'high' DESC, detected_days_ago"),
         "leadership": rows("SELECT * FROM leadership"),
+        "agent": rights.get("agent", {}),
     }
 
 
@@ -122,3 +132,16 @@ def decide(approval_id: str, decision: str) -> dict[str, Any]:
 @app.get("/api/actions")
 def actions() -> list[dict[str, Any]]:
     return rows("SELECT * FROM actions_log ORDER BY executed_at DESC")
+
+
+@app.get("/api/reports")
+def reports() -> list[dict[str, Any]]:
+    return rows("SELECT * FROM reports ORDER BY created_at DESC")
+
+
+@app.get("/reports/{report_id}", response_class=PlainTextResponse)
+def report(report_id: str) -> str:
+    found = rows("SELECT * FROM reports WHERE report_id = ?", (report_id,))
+    if not found:
+        raise HTTPException(status_code=404, detail=f"Unknown report '{report_id}'")
+    return (HERE / found[0]["path"]).read_text()

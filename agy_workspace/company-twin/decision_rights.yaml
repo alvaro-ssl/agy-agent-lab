@@ -1,36 +1,77 @@
 # Decision rights for the company twin agent — what it may decide alone, and what needs a human.
-# Starting point for Play 2 Step 2: /grill-me interviews you and rewrites this file.
+# Starting point for Play 2 step 2: /grill-me (autonomous-agent-design skill) picks the agent type, then
+# interviews you and rewrites this file.
 #
 # mode:
 #   autonomous  — the agent acts on its own
 #   threshold   — autonomous up to `autonomous_up_to` (in `unit`); above that, `approver` must approve
 #   approval    — always needs `approver`
 #   forbidden   — the agent must never do this
-# approver is a leadership role (CEO, CFO, COO, CCO, CHRO, CTO); names come from the twin's leadership table.
-# unit: currency (amount of money), pct (absolute % change), count, or none.
+# approver is a leadership role (CEO, CFO, COO, CCO, CHRO, CTO, CRO, CSO); names come from the twin's leadership table.
+# unit: currency (money in the company's currency), pct (absolute % change), or none.
+
+agent:
+  type: undecided              # operational_resilience | margin_guardian | customer_rescue | growth_scout
+  sponsor: undecided
+  scope: To be agreed in /grill-me.
 
 default:                       # any action not listed below
   mode: approval
   approver: CEO
 
 actions:
+  # --- every agent ---
   executive_alert:
     description: Notify an executive about a signal, with the evidence and a recommendation.
     mode: autonomous
     unit: none
-
   create_initiative:
     description: Open an improvement initiative with an owner, a goal and a review date.
     mode: autonomous
     unit: none
 
-  retention_offer:
-    description: Fund a retention offer (credits, discounts, service upgrades) for a customer segment.
+  # --- operations & resilience ---
+  throttle_noncritical:
+    description: Defer or slow non-critical work to protect a critical process.
+    mode: autonomous
+    unit: none
+  reroute_capacity:
+    description: Move work or volume to a backup site, team or region.
+    mode: threshold
+    unit: currency
+    autonomous_up_to: 100000
+    approver: COO
+  supplier_expedite:
+    description: Pay an existing supplier for expedited capacity or alternative logistics.
+    mode: threshold
+    unit: currency
+    autonomous_up_to: 250000
+    approver: COO
+  activate_backup_supplier:
+    description: Shift volume to a qualified standby supplier.
+    mode: approval
+    unit: currency
+    approver: COO
+  system_capacity_increase:
+    description: Add capacity or failover to a platform or system.
     mode: threshold
     unit: currency
     autonomous_up_to: 50000
-    approver: CCO
+    approver: CTO
 
+  # --- finance ---
+  remediation_spend:
+    description: Pay for burst capacity, overtime or contractors to recover a degraded process.
+    mode: threshold
+    unit: currency
+    autonomous_up_to: 250000
+    approver: CFO
+  budget_reallocation:
+    description: Move operating budget between business units or functions.
+    mode: threshold
+    unit: currency
+    autonomous_up_to: 100000
+    approver: CFO
   price_change:
     description: Change the list price of a product line (amount = % change, e.g. 2.5 or -1).
     mode: threshold
@@ -38,36 +79,43 @@ actions:
     autonomous_up_to: 1.0
     approver: CCO
 
-  budget_reallocation:
-    description: Move operating budget between business units or functions.
-    mode: threshold
-    unit: currency
-    autonomous_up_to: 100000
-    approver: CFO
-
-  supplier_expedite:
-    description: Pay an existing supplier for expedited capacity or alternative logistics.
-    mode: threshold
-    unit: currency
-    autonomous_up_to: 250000
-    approver: COO
-
-  supplier_switch:
-    description: Move volume from one supplier to another.
-    mode: approval
+  # --- customers ---
+  prioritise_work:
+    description: Re-prioritise or re-route stuck orders and cases to protect delivery commitments.
+    mode: autonomous
     unit: none
-    approver: COO
+  customer_credit:
+    description: Issue an SLA or goodwill credit to a key account (within the account's goodwill ceiling).
+    mode: threshold
+    unit: currency
+    autonomous_up_to: 25000
+    approver: CCO
+  retention_offer:
+    description: Fund a retention offer (credits, discounts, service upgrades) for a customer segment.
+    mode: threshold
+    unit: currency
+    autonomous_up_to: 50000
+    approver: CCO
+  account_briefing:
+    description: Draft an internal resolution briefing for the account team (no personal data, not sent to the customer).
+    mode: autonomous
+    unit: none
 
-  hiring_requisition:
-    description: Open new roles in an organisation unit (amount = number of roles).
+  # --- growth ---
+  growth_pilot:
+    description: Commit budget or capacity to a pilot of a new product, service or market.
     mode: approval
-    unit: count
-    approver: CHRO
+    unit: currency
+    approver: CEO
 
-  workforce_reduction:
-    description: Redundancies, layoffs or reduced hours.
+  # --- sensitive: people decisions stay with people leaders ---
+  people_operations:
+    description: >-
+      Performance management, career moves and promotions, compensation, hiring and role changes. Sensitive and
+      critical for trust — decided by people leaders. The agent may only share aggregate insights (e.g. attrition,
+      engagement, capacity), never act or single out individuals.
     mode: forbidden
-    unit: count
+    unit: none
 
   external_communication:
     description: Statements to customers, press, investors or regulators.

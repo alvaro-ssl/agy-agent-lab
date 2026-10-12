@@ -83,10 +83,11 @@ async function getJSON(url, options) {
 async function loadAll() {
   document.body.classList.add("refreshing");
   try {
-    const [overview, approvals, actions] = await Promise.all([
+    const [overview, approvals, actions, reports] = await Promise.all([
       getJSON("/api/overview"),
       getJSON("/api/approvals"),
       getJSON("/api/actions"),
+      getJSON("/api/reports"),
     ]);
     currency = overview.company.currency || "EUR";
     renderHeader(overview);
@@ -96,6 +97,7 @@ async function loadAll() {
     renderSignals(overview.signals);
     renderBusinessUnits(overview.business_units);
     renderActions(actions);
+    renderReports(reports);
   } finally {
     document.body.classList.remove("refreshing");
     document.body.dataset.loaded = String(Date.now());
@@ -109,6 +111,9 @@ function renderHeader(o) {
   document.getElementById("company-meta").textContent =
     `${c.industry_label} · ${c.headquarters} · ${c.employees.toLocaleString()} employees · ${c.description}`;
   document.getElementById("period-chip").textContent = `${o.period.first} → ${o.period.last}`;
+  const agent = o.agent || {};
+  document.getElementById("agent-chip").textContent =
+    agent.type && agent.type !== "undecided" ? `Agent: ${label(agent.type)} · ${agent.sponsor}` : "Agent: not designed yet";
   document.getElementById("updated").textContent = `Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
 }
 
@@ -254,6 +259,24 @@ function renderActions(actions) {
         el("td", { class: "rationale", text: a.rationale }),
       ]);
     })
+  );
+}
+
+function renderReports(reports) {
+  const list = document.getElementById("report-list");
+  if (!reports.length) {
+    list.replaceChildren(el("li", { class: "empty", text: "No reports yet. Ask the agent to save its memo or business case." }));
+    return;
+  }
+  list.replaceChildren(
+    ...reports.map((r) =>
+      el("li", {}, [
+        el("div", { class: "feed-main" }, [
+          el("a", { class: "feed-title", href: `/reports/${encodeURIComponent(r.report_id)}`, target: "_blank", text: r.title }),
+          el("div", { class: "feed-meta", text: `${r.report_id} · by ${r.author} ${ago(r.created_at)}` }),
+        ]),
+      ])
+    )
   );
 }
 

@@ -25,7 +25,7 @@ from pathlib import Path
 
 import yaml
 
-from archetypes import ARCHETYPES, FIRST_NAMES, LAST_NAMES
+from archetypes import ACCOUNT_PREFIXES, ARCHETYPES, EXTRAS, FIRST_NAMES, FX_PER_EUR, LAST_NAMES, REGION_CURRENCY
 
 HERE = Path(__file__).resolve().parent
 MONTHS = 24
@@ -62,6 +62,9 @@ class Twin:
         self.a = ARCHETYPES[industry]
         seed = int(hashlib.sha256(self.c["name"].lower().encode()).hexdigest()[:8], 16)
         self.rng = random.Random(seed)
+        self.rng2 = random.Random(seed + 1)  # separate stream for the agent-type layers, so core data stays stable
+        self.x = EXTRAS[industry]
+        self.base = self.c.get("currency", "EUR")
         self.months = month_list(MONTHS)
         self.rev = float(self.c["annual_revenue_m"]) * 1e6
         self.tables: dict[str, list[dict]] = {}
@@ -71,12 +74,13 @@ class Twin:
     def noise(self, spread: float = 0.03) -> float:
         return self.rng.uniform(1 - spread, 1 + spread)
 
-    def person(self, used: set) -> str:
+    def person(self, used: set, rng: random.Random | None = None) -> str:
         """A synthetic name; first and last names are not reused until the pools run out."""
+        rng = rng or self.rng
         firsts = [f for f in FIRST_NAMES if f not in {u.split(" ", 1)[0] for u in used}] or FIRST_NAMES
         lasts = [l for l in LAST_NAMES if l not in {u.split(" ", 1)[1] for u in used}] or LAST_NAMES
         while True:
-            name = f"{self.rng.choice(firsts)} {self.rng.choice(lasts)}"
+            name = f"{rng.choice(firsts)} {rng.choice(lasts)}"
             if name not in used:
                 used.add(name)
                 return name
@@ -110,6 +114,14 @@ class Twin:
         self.supply_layer()
         self.finance_layer()
         self.risk_layer()
+        # Layers used by the four agent types (separate random stream)
+        self.leadership_extras()
+        self.fx_layer()
+        self.systems_layer()
+        self.accounts_layer()
+        self.dependencies_and_buffers()
+        self.playbooks_and_costs()
+        self.growth_layer()
         self.add_signals()
 
     def company_layer(self) -> None:
@@ -128,7 +140,7 @@ class Twin:
                                  "annual_revenue": round(self.rev * r["share"], 2)})
         used: set = set()
         roles = [("CEO", "Chief Executive Officer"), ("CFO", "Chief Financial Officer"),
-                 ("COO", "Chief Operating Officer"), ("CCO", "Chief Commercial Officer"),
+                 ("COO", "Chief Operating Officer"), ("CCO", "Chief Customer & Commercial Officer"),
                  ("CHRO", "Chief People Officer"), ("CTO", "Chief Technology Officer")]
         self.leaders = {}
         for role, title in roles:
@@ -367,6 +379,250 @@ class Twin:
                                 "target": float(self.c.get("ebitda_margin_target_pct", 10)), "current": round(margin, 1),
                                 "status": "on track" if margin >= float(self.c.get("ebitda_margin_target_pct", 10)) else "at risk"})
 
+
+    # -- layers for the four agent types -------------------------------------------
+    def to_base(self, amount: float, currency: str) -> float:
+        return amount / self.fx_now[currency]
+
+    def leadership_extras(self) -> None:
+        for role, title in [("CRO", "Chief Risk Officer"), ("CSO", "Chief Strategy Officer")]:
+            name = self.person(self.used_names, self.rng2)
+            self.leaders[role] = name
+            self.add("leadership", {"role": role, "title": title, "name": name})
+        for ou in self.tables["org_units"]:
+            talent = ou is getattr(self, "talent_unit", None)
+            ou["utilization_pct"] = 97.0 if talent else round(self.rng2.uniform(72, 93), 1)
+
+    def fx_layer(self) -> None:
+        base_eur = FX_PER_EUR.get(self.base, 1.0)
+        currencies = {self.base}
+        for r in self.tables["regions"]:
+            name = r["name"].lower()
+            cur = next((c for keys, c in REGION_CURRENCY if any(k == name or k in name.split() or name.startswith(k) for k in keys)), None)
+            r["currency"] = cur or self.base
+            currencies.add(r["currency"])
+        self.fx_now = {}
+        for cur in sorted(currencies):
+            per_base = FX_PER_EUR.get(cur, 1.0) / base_eur
+            phase = self.rng2.uniform(0, 6)
+            for k, m in enumerate(self.months):
+                rate = per_base * (1 + 0.03 * __import__("math").sin(k / 4 + phase)) * self.rng2.uniform(0.995, 1.005)
+                if cur == self.base:
+                    rate = 1.0
+                self.add("fx_rates", {"month": m, "currency": cur, "units_per_base": round(rate, 5), "base_currency": self.base})
+            self.fx_now[cur] = [r for r in self.tables["fx_rates"] if r["currency"] == cur][-1]["units_per_base"]
+
+    def systems_layer(self) -> None:
+        self.systems = []
+        n = MONTHS
+        for i, (name, stype, headroom, spof, procs) in enumerate(self.x["systems"]):
+            sysrow = {"system_id": f"SYS{i + 1}", "name": name, "type": stype,
+                      "capacity_headroom_pct": float(headroom), "single_point_of_failure": int(spof),
+                      "has_failover": int(not spof),
+                      "supports_processes": ", ".join(f"P{p + 1}" for p in procs if p < len(self.processes)),
+                      "availability_30d_pct": round(99.9 - (0.25 if spof else self.rng2.uniform(0, 0.08)), 2)}
+            for k, m in enumerate(self.months):
+                h = ramp(34.0, headroom, k, n, n - 6) if spof else headroom * self.rng2.uniform(0.9, 1.1)
+                self.kpi(m, "system", sysrow["system_id"], name, "capacity_headroom_pct", h)
+            self.systems.append(sysrow)
+            self.add("systems", sysrow)
+        self.spof = next(s for s in self.systems if s["single_point_of_failure"])
+
+    def accounts_layer(self) -> None:
+        segs = [self.segments[i] for i in self.x["account_segments"] if i < len(self.segments)] or self.segments[-1:]
+        pool = min(sum(s["annual_revenue"] for s in segs) * 0.35, self.rev * 0.2)
+        n_acc = 36
+        weights = [1 / (i + 1) ** 0.9 for i in range(n_acc)]
+        total_w = sum(weights)
+        names, used = [], set()
+        while len(names) < n_acc:
+            nm = f"{self.rng2.choice(ACCOUNT_PREFIXES)} {self.rng2.choice(self.x['account_suffixes'])}"
+            if nm not in used:
+                used.add(nm)
+                names.append(nm)
+        regions = self.tables["regions"]
+        affected_ranks = [0, 2, 3, 5, 8, 11, 14]
+        renewing = {0: 38, 2: 21, 3: 55, 5: 47, 8: 29}
+        proc = self.processes[1]
+        self.accounts, self.affected = [], []
+        for i in range(n_acc):
+            region = self.rng2.choices(regions, weights=[r["revenue_share"] for r in regions])[0]
+            foreign = [r for r in regions if r["currency"] != self.base]
+            if i in (2, 5) and foreign:  # make the finance story multi-currency
+                region = foreign[(i // 3) % len(foreign)]
+            cur = region["currency"]
+            acv_base = pool * weights[i] / total_w
+            acv = acv_base * self.fx_now[cur]
+            affected = i in affected_ranks
+            seg = segs[i % len(segs)]
+            penalty_h = acv * 0.00003  # ~0.003% of contract value per hour in breach
+            hours = 24 * self.rng2.uniform(5, 9) if affected else 0
+            acc = {"account_id": f"ACC{i + 1:03d}", "name": names[i], "industry": names[i].split(" ", 1)[1],
+                   "segment_id": seg["segment_id"], "region": region["name"], "currency": cur,
+                   "tier": "Platinum" if i < 8 else "Gold" if i < 22 else "Silver",
+                   "annual_contract_value": round(acv, 2), "annual_contract_value_base": round(acv_base, 2),
+                   "renewal_in_days": renewing.get(i, int(self.rng2.uniform(75, 360)) if not affected else int(self.rng2.uniform(90, 200))),
+                   "health_score": round(self.rng2.uniform(40, 55) if affected else self.rng2.uniform(68, 92)),
+                   "nps": round(self.rng2.uniform(2, 18) if affected else self.rng2.uniform(28, 58)),
+                   "churn_risk_pct": round(self.rng2.uniform(35, 62) if affected else self.rng2.uniform(4, 16), 1),
+                   "account_owner": self.person(self.used_names, self.rng2),
+                   "contact_role": self.rng2.choice(self.x["contact_roles"]),
+                   "sla_penalty_per_hour": round(penalty_h, 2), "sla_penalty_cap": round(acv * 0.15, 2),
+                   "sla_hours_in_breach": round(hours, 1), "sla_penalty_accrued": round(penalty_h * hours, 2),
+                   "goodwill_credit_ceiling": round(acv * 0.02, 2)}
+            self.accounts.append(acc)
+            self.add("accounts", acc)
+            if affected:
+                self.affected.append(acc)
+                self.add("work_queue", {"account_id": acc["account_id"], "process_id": proc["process_id"],
+                                        "items_open": int(self.rng2.uniform(14, 80)),
+                                        "items_breaching_sla": int(self.rng2.uniform(9, 40)),
+                                        "oldest_item_age_hours": round(proc["target_cycle_hours"] * self.rng2.uniform(1.7, 2.6), 1),
+                                        "sla_hours": proc["target_cycle_hours"],
+                                        "value_at_risk": round(acv * self.rng2.uniform(0.01, 0.03), 2), "currency": cur,
+                                        "blocked_by": self.suppliers[0]["supplier_id"], "status": "breaching SLA"})
+            elif self.rng2.random() < 0.5:
+                p = self.rng2.choice([p for p in self.processes if p is not proc])
+                self.add("work_queue", {"account_id": acc["account_id"], "process_id": p["process_id"],
+                                        "items_open": int(self.rng2.uniform(1, 12)), "items_breaching_sla": 0,
+                                        "oldest_item_age_hours": round(p["target_cycle_hours"] * self.rng2.uniform(0.2, 0.9), 1),
+                                        "sla_hours": p["target_cycle_hours"],
+                                        "value_at_risk": 0.0, "currency": cur, "blocked_by": None, "status": "on track"})
+        burn_h = sum(self.to_base(a["sla_penalty_per_hour"], a["currency"]) for a in self.affected)
+        self.add("incidents", {"incident_id": "INC-301", "severity": "SEV2", "status": "ongoing",
+                               "title": f"{proc['name']} delays — {self.suppliers[0]['name']} capacity shortfall",
+                               "process_id": proc["process_id"], "system_id": None, "started_days_ago": 8,
+                               "resolved_days_ago": None, "accounts_affected": len(self.affected),
+                               "sla_penalties_per_hour_base": round(burn_h, 2)})
+        self.add("incidents", {"incident_id": "INC-288", "severity": "SEV1", "status": "resolved",
+                               "title": f"{self.spof['name']} brownout — capacity exhausted at month-end peak",
+                               "process_id": self.spof["supports_processes"].split(", ")[0], "system_id": self.spof["system_id"],
+                               "started_days_ago": 26, "resolved_days_ago": 26, "accounts_affected": 11,
+                               "sla_penalties_per_hour_base": 0.0})
+        self.add("incidents", {"incident_id": "INC-276", "severity": "SEV3", "status": "resolved",
+                               "title": f"{self.processes[2]['name']} backlog after a release", "process_id": self.processes[2]["process_id"],
+                               "system_id": None, "started_days_ago": 41, "resolved_days_ago": 39, "accounts_affected": 2,
+                               "sla_penalties_per_hour_base": 0.0})
+
+    def dependencies_and_buffers(self) -> None:
+        s1 = self.suppliers[0]
+        alt = {"supplier_id": f"S{len(self.suppliers) + 1}", "name": f"Alternative {s1['category'].lower()} provider",
+               "category": s1["category"], "annual_spend": 0.0, "dependency_pct": 0.0,
+               "baseline_lead_time_days": round(s1["baseline_lead_time_days"] * 1.1, 1), "supports_process_id": None,
+               "current_lead_time_days": round(s1["baseline_lead_time_days"] * 1.1, 1), "risk_score": 25,
+               "status": "qualified standby", "cost_premium_pct": 8.0}
+        for sup in self.suppliers:
+            sup.setdefault("status", "active")
+            sup.setdefault("cost_premium_pct", 0.0)
+        self.suppliers.append(alt)
+        self.add("suppliers", alt)
+        self.alt_supplier = alt
+        sites = self.tables["sites"]
+        for i, proc in enumerate(self.processes):
+            for sysrow in self.systems:
+                if proc["process_id"] in sysrow["supports_processes"].split(", "):
+                    self.add("dependencies", {"from_type": "process", "from_id": proc["process_id"], "from_name": proc["name"],
+                                              "to_type": "system", "to_id": sysrow["system_id"], "to_name": sysrow["name"],
+                                              "criticality": "high" if sysrow["single_point_of_failure"] else "medium",
+                                              "has_alternative": sysrow["has_failover"], "alternative": None if sysrow["single_point_of_failure"] else "failover region"})
+            sup = s1 if i == 1 else self.suppliers[1 + (i % (len(self.suppliers) - 2))]
+            self.add("dependencies", {"from_type": "process", "from_id": proc["process_id"], "from_name": proc["name"],
+                                      "to_type": "supplier", "to_id": sup["supplier_id"], "to_name": sup["name"],
+                                      "criticality": "high" if i == 1 else "medium", "has_alternative": 1,
+                                      "alternative": alt["name"] if i == 1 else "secondary supplier"})
+            ou = next((o for o in self.org_units if o["bu_id"] == proc["owner_bu_id"]), self.org_units[0])
+            self.add("dependencies", {"from_type": "process", "from_id": proc["process_id"], "from_name": proc["name"],
+                                      "to_type": "org_unit", "to_id": ou["org_unit_id"], "to_name": ou["name"],
+                                      "criticality": "medium", "has_alternative": 0, "alternative": None})
+            if i < 2:
+                typed = [st for st in sites if st["type"] == self.a["site_types"][-1][0]]
+                if typed:
+                    main = max(typed, key=lambda st: st["utilization_pct"])
+                    backup = next((st for st in typed if st is not main), None)
+                    self.add("dependencies", {"from_type": "process", "from_id": proc["process_id"], "from_name": proc["name"],
+                                              "to_type": "site", "to_id": main["site_id"], "to_name": main["name"],
+                                              "criticality": "medium", "has_alternative": int(backup is not None),
+                                              "alternative": backup["name"] if backup else None})
+
+        def buffer(name, etype, eid, unit, current, threshold, per_week, regulatory, signal=None):
+            falling = per_week < 0
+            gap = current - threshold
+            days = 0.0 if gap <= 0 else (round(gap / -per_week * 7, 1) if falling else None)
+            self.add("buffers", {"buffer_id": f"B{len(self.tables.get('buffers', [])) + 1}", "name": name, "entity_type": etype,
+                                 "entity_id": eid, "unit": unit, "current": round(current, 2), "threshold": threshold,
+                                 "change_per_week": round(per_week, 3), "days_to_breach": days, "regulatory": int(regulatory),
+                                 "linked_signal": signal})
+
+        buffer(f"{self.spof['name']} capacity headroom", "system", self.spof["system_id"], "%", self.spof["capacity_headroom_pct"], 5.0, -3.0, False, "SIG9")
+        proc = self.processes[1]
+        buffer(f"{proc['name']} SLA attainment vs contracts", "process", proc["process_id"], "%", proc["current_sla_attainment_pct"], 90.0, -1.5, False, "SIG2")
+        buffer(f"Days of cover — {s1['category'].lower()}", "supplier", s1["supplier_id"], "days", 4.2, 3.0, -0.4, False, "SIG1")
+        name, unit, cur, thr, monthly, _ = self.x["regulatory_buffer"]
+        buffer(name, "company", "GROUP", unit, cur, thr, monthly / 4.3, True)
+        t = self.talent_unit
+        buffer(f"{t['name']} workload capacity", "org_unit", t["org_unit_id"], "% utilised", 100 - 97.0, 0.0, -0.5, False, "SIG5")
+
+    def playbooks_and_costs(self) -> None:
+        s1, proc, alt = self.suppliers[0], self.processes[1], self.alt_supplier
+        ops_unit = next((o for o in self.org_units if o["bu_id"] == proc["owner_bu_id"]), self.org_units[0])
+        burst_h = round(12 * 1.5 * ops_unit["cost_per_fte"] / 1800, 2)
+        rows = [
+            ("Expedite with " + s1["name"], "supplier_expedite", "supplier", s1["supplier_id"], s1["name"], s1["annual_spend"] * 0.005, 0.0, 14, 80, "SIG1, SIG2"),
+            (f"Shift 40% of volume to {alt['name']}", "activate_backup_supplier", "supplier", alt["supplier_id"], alt["name"], s1["annual_spend"] * 0.001, s1["annual_spend"] * 0.4 * 0.08 / 365, 21, 60, "SIG1"),
+            (f"Defer non-critical work in {proc['name']}", "throttle_noncritical", "process", proc["process_id"], proc["name"], 0.0, 0.0, 1, 15, "SIG2"),
+            (f"Burst capacity for {ops_unit['name']}", "remediation_spend", "org_unit", ops_unit["org_unit_id"], ops_unit["name"], 0.0, burst_h * 24, 2, 35, "SIG2, SIG8"),
+            (f"Prioritise Platinum & Gold accounts in {proc['name']}", "prioritise_work", "process", proc["process_id"], proc["name"], 0.0, 0.0, 1, 25, "SIG7, SIG8"),
+            (f"Add capacity and failover to {self.spof['name']}", "system_capacity_increase", "system", self.spof["system_id"], self.spof["name"], self.rev * 0.00004, 0.0, 7, 90, "SIG9"),
+            ("Goodwill credits for affected key accounts", "customer_credit", "accounts", "affected", f"{len(self.affected)} key accounts",
+             sum(self.to_base(a["goodwill_credit_ceiling"], a["currency"]) for a in self.affected) * 0.5, 0.0, 0, 30, "SIG7"),
+        ]
+        for i, (name, action, ttype, tid, tname, one_off, daily, days, reduction, signals) in enumerate(rows):
+            self.add("mitigation_playbooks", {"playbook_id": f"PB{i + 1}", "name": name, "action_type": action,
+                                              "target_type": ttype, "target_id": tid, "target_name": tname,
+                                              "one_off_cost_base": round(one_off, 2), "daily_cost_base": round(daily, 2),
+                                              "time_to_effect_days": days, "burn_reduction_pct": reduction, "addresses": signals})
+        seg = self.segments[1]
+        churn_h = seg["annual_revenue"] / 8760 * 0.012 * 0.5
+        for name, value, unit in [
+            ("burst_capacity_per_hour", burst_h, f"{self.base}/hour"),
+            ("rework_cost_per_item", round(self.rng2.uniform(18, 60), 2), f"{self.base}/item"),
+            ("revenue_at_risk_per_hour_from_churn", round(churn_h, 2), f"{self.base}/hour"),
+            ("inventory_carrying_cost_pct_per_year", 9.0, "%"),
+            ("discount_rate_pct_per_year", 10.0, "%"),
+        ]:
+            self.add("cost_rates", {"name": name, "value": value, "unit": unit})
+
+    def growth_layer(self) -> None:
+        regions = sorted(self.tables["regions"], key=lambda r: -r["revenue_share"])[:4]
+        target_region = regions[1] if len(regions) > 1 else regions[0]
+        stype = self.a["site_types"][-1][0]
+        for st in self.tables["sites"]:
+            if st["region"] == target_region["name"] and st["type"] == stype:
+                st["utilization_pct"] = round(self.rng2.uniform(55, 60), 1)
+        best = self.x["opportunities"][3]
+        margins = [b["margin_pct"] for b in self.bus]
+        for r in regions:
+            for j, opp in enumerate(self.x["opportunities"]):
+                planted = r is target_region and opp == best
+                self.add("market_landscape", {
+                    "region": r["name"], "opportunity": opp,
+                    "market_size_base": round(self.rev * (0.075 if planted else self.rng2.uniform(0.01, 0.06)), -3),
+                    "growth_pct_per_year": round(18.0 if planted else self.rng2.uniform(2, 14), 1),
+                    "our_share_pct": round(0.0 if j >= 2 else self.rng2.uniform(0.5, 4), 1),
+                    "leading_competitor": self.rng2.choice(self.x["competitors"]),
+                    "leading_competitor_share_pct": round(self.rng2.uniform(12, 38), 1),
+                    "estimated_margin_pct": round(max(margins) + 4 if planted else self.rng2.uniform(min(margins) - 6, max(margins)), 1),
+                    "capability_fit": "high" if planted else self.rng2.choice(["medium", "low", "medium"]),
+                })
+        self.growth = {"region": target_region["name"], "opportunity": best, "site_type": stype}
+        for theme, pidx in self.x["friction_themes"]:
+            proc = self.processes[min(pidx, len(self.processes) - 1)]
+            hot = proc is self.processes[1]
+            self.add("friction_points", {"theme": theme, "process_id": proc["process_id"],
+                                         "segment_id": self.segments[1]["segment_id"] if hot else self.rng2.choice(self.segments)["segment_id"],
+                                         "mentions_last_30d": int(self.rng2.uniform(900, 2400) if hot else self.rng2.uniform(80, 600)),
+                                         "trend_pct": round(self.rng2.uniform(110, 160) if hot else self.rng2.uniform(-15, 20), 1)})
+
     def risk_layer(self) -> None:
         for i, (reg, scope) in enumerate(self.a["regulations"]):
             self.add("policies", {"policy_id": f"REG{i + 1}", "type": "regulation", "name": reg, "rule": scope})
@@ -418,6 +674,37 @@ class Twin:
              "detail": f"{self.money(overspend)} above plan; spend rising every month while revenue tracks budget.",
              "detected_days_ago": 3, "caused_by": None},
         ]
+        spof_days = next(b["days_to_breach"] for b in self.tables["buffers"] if b["entity_id"] == self.spof["system_id"])
+        renew = [a for a in self.affected if a["renewal_in_days"] <= 60]
+        renew_acv = sum(a["annual_contract_value_base"] for a in renew)
+        burn = sum(self.to_base(a["sla_penalty_per_hour"], a["currency"]) for a in self.affected)
+        accrued = sum(self.to_base(a["sla_penalty_accrued"], a["currency"]) for a in self.affected)
+        currencies = sorted({a["currency"] for a in self.affected})
+        under = [st for st in self.tables["sites"] if st["region"] == self.growth["region"] and st["type"] == self.growth["site_type"]]
+        util = sum(st["utilization_pct"] for st in under) / max(1, len(under))
+        self.signals += [
+            {"signal_id": "SIG7", "severity": "high", "layer": "customers", "entity_type": "accounts",
+             "entity_id": ", ".join(a["account_id"] for a in renew),
+             "title": f"{len(renew)} key accounts worth {self.money(renew_acv)} a year renew within 60 days — all hit by {proc['name']} delays",
+             "detail": f"{len(self.affected)} key accounts have work breaching SLA in '{proc['name']}'; their health scores are 40-55 and churn risk 35-62%.",
+             "detected_days_ago": 4, "caused_by": "SIG2"},
+            {"signal_id": "SIG8", "severity": "high", "layer": "finance", "entity_type": "accounts",
+             "entity_id": ", ".join(a["account_id"] for a in self.affected),
+             "title": f"SLA penalties accruing at {self.money(burn)} an hour across {len(self.affected)} contracts",
+             "detail": f"{self.money(accrued)} accrued so far, in {', '.join(currencies)}; penalties keep compounding until '{proc['name']}' recovers.",
+             "detected_days_ago": 6, "caused_by": "SIG2"},
+            {"signal_id": "SIG9", "severity": "high", "layer": "operations", "entity_type": "system",
+             "entity_id": self.spof["system_id"],
+             "title": f"{self.spof['name']} headroom at {self.spof['capacity_headroom_pct']:.0f}% — breaches the 5% floor in ~{spof_days:.0f} days",
+             "detail": f"Single point of failure with no failover; supports {self.spof['supports_processes']}. It browned out at the last month-end peak (INC-288).",
+             "detected_days_ago": 2, "caused_by": None},
+            {"signal_id": "SIG10", "severity": "opportunity", "layer": "strategy", "entity_type": "region",
+             "entity_id": self.growth["region"],
+             "title": f"Spare capacity: {self.growth['site_type'].lower()}s in {self.growth['region']} at {util:.0f}% utilisation",
+             "detail": f"Meanwhile '{self.growth['opportunity']}' is growing 18% a year in {self.growth['region']} with a high capability fit — "
+                       f"a possible growth play using capacity we already pay for.",
+             "detected_days_ago": 9, "caused_by": None},
+        ]
         for s in self.signals:
             self.add("signals", s)
         self.add("risks", {"risk_id": f"RK{len(self.tables['risks']) + 1}",
@@ -457,6 +744,7 @@ class Twin:
                 action_id TEXT PRIMARY KEY, action_type TEXT, target TEXT, amount REAL, unit TEXT, rationale TEXT,
                 mode TEXT, authorised_by TEXT, approval_id TEXT, executed_at TEXT
             );
+            CREATE TABLE reports (report_id TEXT PRIMARY KEY, title TEXT, path TEXT, created_at TEXT, author TEXT);
             CREATE INDEX kpi_lookup ON monthly_kpis (entity_type, entity_id, metric);
             """
         )

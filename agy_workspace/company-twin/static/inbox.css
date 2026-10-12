@@ -158,6 +158,8 @@ td { padding: 9px 10px; border-bottom: 1px solid var(--grid); vertical-align: mi
 .pill-high { --pill: var(--critical); }
 .pill-medium { --pill: var(--warning); }
 .pill-low { --pill: var(--good); }
+.pill-opportunity { --pill: var(--accent); }
+a.feed-title { color: var(--text-primary); text-decoration: underline; text-decoration-color: var(--baseline); }
 .cause { color: var(--text-muted); font-size: 12px; margin-top: 3px; }
 .cause::before { content: "↳ "; color: var(--serious); }
 

@@ -27,6 +27,14 @@ STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
+@app.middleware("http")
+async def no_browser_cache(request, call_next):
+    # The dashboard is an internal tool: always serve the latest code and data.
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 class ApprovalDecision(BaseModel):
     decided_by: str = ""
 

@@ -7,10 +7,11 @@
 - `company-twin/` — **Play 2.** A synthetic, multi-layered digital twin of a company:
   - `company_profile.yaml` — the company the twin represents (edit it, then regenerate);
   - `generate_twin.py` — builds `data/twin.db`, `data/csv/` and `data/twin_summary.md` from the profile;
-  - `decision_rights.yaml` — what the agent may decide alone, up to which limits, what needs which executive,
-    and what is forbidden;
-  - `twin_tools.py` — the agent's tools (analyse, simulate, act);
-  - `inbox_app.py` — the Company Twin overview and Decision Inbox where executives approve the agent's requests.
+  - `decision_rights.yaml` — the chosen agent type, what it may decide alone, up to which limits, what needs
+    which executive, and what is forbidden;
+  - `twin_tools.py` — the agent's tools; `AGENT_TYPES` maps each of the four agent designs to its toolset;
+  - `inbox_app.py` — the Company Twin overview and Decision Inbox where executives approve the agent's requests
+    and read its reports.
 - `twin-agent/` — created in Play 2 with `agents-cli` (not present until then).
 - `eval-kit/` — decision-governance eval dataset and metrics for the Play 2 agent.
 
@@ -30,4 +31,5 @@
 
 - Ports: 3000 Control Tower · 8080 agent Playground · 8090 Company Twin & Decision Inbox.
 - The twin is synthetic. Never put real people's names in `company_profile.yaml`; leadership names are generated.
+- People decisions (performance, careers, compensation, hiring) are never taken by agents.
 - Put screenshots and other verification output in `artifacts/`.

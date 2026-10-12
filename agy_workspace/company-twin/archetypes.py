@@ -312,3 +312,112 @@ LAST_NAMES = [
     "Mendes", "Kaya", "Horvath", "Janssen", "Ferrari", "Nyberg", "Adeyemi", "Laurent", "Sato", "Kruger",
     "Delgado", "Hughes", "Wójcik", "Ibrahim", "Van Dijk", "Marino", "Papadakis", "Larsen", "Obi", "Romano",
 ]
+
+# Extra industry detail used by the four agent types (resilience, margin & cash, customer rescue, growth):
+#   account_segments   indexes of the segments that hold the named key accounts (B2B or partner contracts)
+#   account_suffixes   words used to generate realistic, fictional key-account names
+#   contact_roles      who the account team talks to (roles only — no personal data)
+#   systems            [name, type, capacity headroom %, single point of failure?, process indexes it supports]
+#   regulatory_buffer  [name, unit, current, threshold, monthly change, higher is better?]
+#   opportunities      adjacent growth plays the industry is pursuing
+#   competitors        competitor archetypes in the market landscape
+#   friction_themes    [complaint theme, process index]
+EXTRAS: dict[str, dict] = {
+    "retail_consumer": {
+        "account_segments": [3],
+        "account_suffixes": ["Hotels", "Catering", "Office Supplies", "Pharmacies", "Schools", "Fitness Clubs", "Cafés", "Care Homes"],
+        "contact_roles": ["Head of Procurement", "Operations Director", "Category Buyer"],
+        "systems": [["Order management system", "platform", 9, True, [1, 2]],
+                    ["Warehouse management system", "platform", 31, False, [0, 1]],
+                    ["E-commerce storefront", "digital channel", 44, False, [1]],
+                    ["Store point-of-sale network", "infrastructure", 38, False, [0]]],
+        "regulatory_buffer": ["Cold-chain compliance (audited sites passing)", "%", 98.4, 95.0, -0.6, True],
+        "opportunities": ["Quick commerce (30-minute delivery)", "Retail media network", "Subscription grocery boxes", "B2B office & catering supply"],
+        "competitors": ["Hard discounter", "Online pure-player", "Quick-commerce start-up"],
+        "friction_themes": [["Late home deliveries", 1], ["Missing or substituted items", 1], ["Refund delays", 2], ["Out-of-stock in store", 0]],
+    },
+    "telecom": {
+        "account_segments": [2, 3],
+        "account_suffixes": ["Logistics", "Healthcare", "Bank", "Retail Group", "Hotels", "Manufacturing", "Insurance", "Media"],
+        "contact_roles": ["Head of IT Infrastructure", "CIO", "Procurement Manager"],
+        "systems": [["Service activation platform", "platform", 8, True, [0, 1, 3]],
+                    ["Fibre network inventory", "platform", 27, False, [1]],
+                    ["Mobile core network", "infrastructure", 35, False, [0, 2]],
+                    ["Field workforce scheduler", "platform", 22, False, [1, 2]]],
+        "regulatory_buffer": ["Network availability vs licence obligation", "%", 99.95, 99.9, -0.01, True],
+        "opportunities": ["Private 5G for industrial sites", "Managed SD-WAN for SMEs", "IoT fleet connectivity", "Home energy & broadband bundles"],
+        "competitors": ["National incumbent", "Low-cost challenger", "Cable operator"],
+        "friction_themes": [["Missed installation appointments", 1], ["Slow fault repair", 2], ["Porting delays", 0], ["Billing errors", 2]],
+    },
+    "financial_services": {
+        "account_segments": [2],
+        "account_suffixes": ["Builders", "Logistics", "Foods", "Engineering", "Pharma", "Retail", "Energy", "Software"],
+        "contact_roles": ["Finance Director", "Treasurer", "CFO"],
+        "systems": [["Loan origination system", "platform", 7, True, [1, 3]],
+                    ["Core banking platform", "platform", 33, False, [0, 1, 2, 3]],
+                    ["Mobile banking app", "digital channel", 41, False, [0, 2]],
+                    ["Payments hub", "infrastructure", 29, False, [2]]],
+        "regulatory_buffer": ["Liquidity coverage ratio", "%", 131.0, 110.0, -2.5, True],
+        "opportunities": ["Embedded finance for SME platforms", "Green mortgages & retrofit loans", "Digital wealth for the mass-affluent", "Banking-as-a-service"],
+        "competitors": ["Neobank", "Large universal bank", "Fintech lender"],
+        "friction_themes": [["Slow mortgage decisions", 1], ["Account opening paperwork", 0], ["Card dispute delays", 2], ["App outages", 0]],
+    },
+    "industrial_manufacturing": {
+        "account_segments": [0, 1, 2, 3],
+        "account_suffixes": ["Automotive", "Packaging", "Utilities", "Chemicals", "Food Processing", "Rail", "Pharma", "Building Services"],
+        "contact_roles": ["Plant Director", "Head of Procurement", "Maintenance Manager"],
+        "systems": [["ERP & MRP system", "platform", 10, True, [0, 1]],
+                    ["Manufacturing execution system", "platform", 26, False, [1]],
+                    ["Field service management", "platform", 34, False, [2]],
+                    ["Product lifecycle management", "platform", 40, False, [3]]],
+        "regulatory_buffer": ["Safety stock of critical components", "days", 18.0, 10.0, -1.6, True],
+        "opportunities": ["Equipment-as-a-service", "Predictive maintenance subscriptions", "Energy-efficiency retrofits", "Aftermarket parts e-commerce"],
+        "competitors": ["Global conglomerate", "Asian low-cost manufacturer", "Specialist niche player"],
+        "friction_themes": [["Late order deliveries", 1], ["Spare parts availability", 2], ["Quote turnaround", 0], ["Commissioning delays", 1]],
+    },
+    "energy_utilities": {
+        "account_segments": [1, 3],
+        "account_suffixes": ["Data Centres", "Steel", "Hospitals", "Retail Parks", "Cold Storage", "Universities", "Water Utility", "Chemicals"],
+        "contact_roles": ["Energy Manager", "Facilities Director", "Head of Procurement"],
+        "systems": [["Grid connection management system", "platform", 6, True, [1]],
+                    ["Billing & CRM platform", "platform", 28, False, [0, 3]],
+                    ["SCADA / grid control", "infrastructure", 37, False, [2]],
+                    ["Smart meter head-end", "platform", 24, False, [3]]],
+        "regulatory_buffer": ["Generation reserve margin", "%", 12.5, 8.0, -0.7, True],
+        "opportunities": ["Home battery & solar bundles", "EV charging for fleets", "Heat-pump installation", "Grid flexibility services"],
+        "competitors": ["Former state incumbent", "Green challenger", "Oil major's retail arm"],
+        "friction_themes": [["Grid connection waiting times", 1], ["Estimated bills", 0], ["Smart meter appointments", 3], ["Outage communication", 2]],
+    },
+    "software_saas": {
+        "account_segments": [0, 1, 3],
+        "account_suffixes": ["Health", "Insurance", "Logistics", "Retail", "Bank", "Media", "Telecom", "Government"],
+        "contact_roles": ["CIO", "VP Engineering", "Head of Procurement"],
+        "systems": [["Provisioning & tenant service", "platform", 8, True, [1]],
+                    ["Core application cluster", "infrastructure", 30, False, [1, 2, 3]],
+                    ["Data pipeline", "platform", 25, False, [1]],
+                    ["Billing & subscription system", "platform", 36, False, [0]]],
+        "regulatory_buffer": ["Uptime vs contractual SLA", "%", 99.96, 99.9, -0.01, True],
+        "opportunities": ["Usage-based AI tier", "Industry edition for healthcare", "Partner marketplace", "Premium SLA & support tier"],
+        "competitors": ["Hyperscaler bundle", "Open-source alternative", "Category leader"],
+        "friction_themes": [["Slow onboarding", 1], ["Support response times", 2], ["Missing integrations", 1], ["Release regressions", 3]],
+    },
+}
+
+ACCOUNT_PREFIXES = [
+    "Nordwind", "Helix", "Ardent", "Brightwater", "Corvid", "Lumen", "Meridian", "Northgate", "Oakline", "Pioneer",
+    "Quanta", "Riverside", "Solace", "Tallis", "Vantage", "Westmark", "Alder", "Beacon", "Cobalt", "Driftwood",
+    "Evergreen", "Fjord", "Granite", "Harbour", "Ironbridge", "Juniper", "Kestrel", "Larkspur", "Marlow", "Nimbus",
+]
+
+# Approximate exchange rates: units of each currency per 1 EUR.
+FX_PER_EUR = {"EUR": 1.0, "USD": 1.09, "GBP": 0.86, "SEK": 11.4, "NOK": 11.6, "DKK": 7.46, "CHF": 0.95, "PLN": 4.3,
+              "JPY": 162.0, "INR": 91.0, "CNY": 7.8, "AUD": 1.64, "CAD": 1.48, "BRL": 5.9, "SGD": 1.46}
+
+REGION_CURRENCY = [
+    (("united kingdom", "uk", "britain", "england"), "GBP"),
+    (("united states", "usa", "us", "north america", "americas"), "USD"),
+    (("sweden", "nordics", "scandinavia"), "SEK"), (("norway",), "NOK"), (("denmark",), "DKK"),
+    (("switzerland",), "CHF"), (("poland",), "PLN"), (("japan",), "JPY"), (("india",), "INR"), (("china",), "CNY"),
+    (("australia",), "AUD"), (("canada",), "CAD"), (("brazil", "latin america", "latam"), "BRL"),
+    (("singapore", "asia", "apac", "asia-pacific"), "SGD"),
+]
