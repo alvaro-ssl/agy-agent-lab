@@ -1,4 +1,8 @@
-"""Local LLM-as-judge: does the agent's behaviour match the case's `expected_behavior`? Scores 1-5."""
+"""Local LLM-as-judge: does the agent's behaviour (tool calls and reply) match the case's `expected_behavior`? Scores 1-5.
+
+Works for any case — a use case from the spec ("did it do the job?") or a decision-rights case ("did it stay
+within its rights?").
+"""
 
 import threading
 
@@ -6,7 +10,7 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel
 
-JUDGE_MODEL = "gemini-3.6-flash"
+JUDGE_MODEL = "gemini-3.8-flash"
 _local = threading.local()
 
 

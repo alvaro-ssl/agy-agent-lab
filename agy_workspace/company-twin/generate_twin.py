@@ -4,11 +4,12 @@
 Output (in company-twin/data/):
   twin.db          SQLite database the agent and the Decision Inbox read
   csv/<table>.csv  every table as CSV, to open in a spreadsheet
-  twin_summary.md  a one-page narrative of the company and what is going wrong
+  twin_summary.md  a one-page narrative: what is going well, what to watch, and where the opportunities are
 
 Layers: 1 strategy & objectives · 2 organisation & people · 3 customers & market · 4 products & services ·
-5 operations & processes · 6 supply chain & assets · 7 finance · 8 risk & governance — plus `signals`, the
-anomalies the agent should find. The same company profile always produces the same twin.
+5 operations & processes · 6 supply chain & assets · 7 finance · 8 risk & governance — plus `signals`: strengths,
+risks to watch and opportunities the agent should find. The same company profile always produces the same twin.
+People appear only as roles (e.g. "Chief Financial Officer"), and customers as segment labels — never names.
 
 Usage:  python generate_twin.py [--profile company_profile.yaml] [--out data]
 """
@@ -25,7 +26,7 @@ from pathlib import Path
 
 import yaml
 
-from archetypes import ACCOUNT_PREFIXES, ARCHETYPES, EXTRAS, FIRST_NAMES, FX_PER_EUR, LAST_NAMES, REGION_CURRENCY
+from archetypes import ARCHETYPES, EXTRAS, FX_PER_EUR, REGION_CURRENCY
 
 HERE = Path(__file__).resolve().parent
 MONTHS = 24
@@ -73,17 +74,6 @@ class Twin:
     # -- helpers ---------------------------------------------------------------
     def noise(self, spread: float = 0.03) -> float:
         return self.rng.uniform(1 - spread, 1 + spread)
-
-    def person(self, used: set, rng: random.Random | None = None) -> str:
-        """A synthetic name; first and last names are not reused until the pools run out."""
-        rng = rng or self.rng
-        firsts = [f for f in FIRST_NAMES if f not in {u.split(" ", 1)[0] for u in used}] or FIRST_NAMES
-        lasts = [l for l in LAST_NAMES if l not in {u.split(" ", 1)[1] for u in used}] or LAST_NAMES
-        while True:
-            name = f"{rng.choice(firsts)} {rng.choice(lasts)}"
-            if name not in used:
-                used.add(name)
-                return name
 
     def add(self, table: str, row: dict) -> None:
         self.tables.setdefault(table, []).append(row)
@@ -138,16 +128,13 @@ class Twin:
         for i, r in enumerate(self.p.get("regions") or [{"name": "Home market", "share": 1.0}]):
             self.add("regions", {"region_id": f"R{i + 1}", "name": r["name"], "revenue_share": r["share"],
                                  "annual_revenue": round(self.rev * r["share"], 2)})
-        used: set = set()
         roles = [("CEO", "Chief Executive Officer"), ("CFO", "Chief Financial Officer"),
                  ("COO", "Chief Operating Officer"), ("CCO", "Chief Customer & Commercial Officer"),
                  ("CHRO", "Chief People Officer"), ("CTO", "Chief Technology Officer")]
         self.leaders = {}
         for role, title in roles:
-            name = self.person(used)
-            self.leaders[role] = name
-            self.add("leadership", {"role": role, "title": title, "name": name})
-        self.used_names = used
+            self.leaders[role] = title  # roles only: the twin never holds people's names
+            self.add("leadership", {"role": role, "title": title, "name": title})
 
     def strategy_layer(self) -> None:
         self.bus = []
@@ -156,7 +143,7 @@ class Twin:
         for i, b in enumerate(bus):
             bu = {"bu_id": f"BU{i + 1}", "name": b["name"], "revenue_share": b["revenue_share"] / total,
                   "margin_pct": float(b.get("margin_pct", 30)), "products": b.get("products") or [b["name"]],
-                  "head": self.person(self.used_names),
+                  "head": f"Head of {b['name']}",
                   "growth_target_pct": float(self.c.get("revenue_growth_target_pct", 5)) + self.rng.uniform(-2, 3)}
             self.bus.append(bu)
             self.add("business_units", {"bu_id": bu["bu_id"], "name": bu["name"], "head": bu["head"],
@@ -184,18 +171,18 @@ class Twin:
         for idx, ((bu, f), w) in enumerate(zip(units, weights)):
             hc = max(8, int(employees * (1 - corp_share) * w / total_w))
             ou = {"org_unit_id": f"OU{idx + 1}", "name": f"{bu['name']} — {f}", "bu_id": bu["bu_id"], "function": f,
-                  "headcount": hc, "manager": self.person(self.used_names)}
+                  "headcount": hc, "manager": f"Head of {f}, {bu['name']}"}
             talent = bu is talent_bu and f == self.a["talent_function"]
             base_attr = self.rng.uniform(8, 13)
             base_eng = self.rng.uniform(66, 76)
-            ou["open_roles"] = 14 if talent else max(0, int(hc * self.rng.uniform(0.01, 0.04)))
+            ou["open_roles"] = 8 if talent else max(0, int(hc * self.rng.uniform(0.01, 0.04)))
             for i, m in enumerate(self.months):
-                attr = ramp(base_attr, 22.0, i, n, n - 3) if talent else base_attr * self.noise(0.08)
-                eng = ramp(base_eng, base_eng - 11, i, n, n - 3) if talent else base_eng * self.noise(0.02)
+                attr = ramp(base_attr, 15.0, i, n, n - 3) if talent else base_attr * self.noise(0.08)
+                eng = ramp(base_eng, base_eng - 4, i, n, n - 3) if talent else base_eng * self.noise(0.02)
                 self.kpi(m, "org_unit", ou["org_unit_id"], ou["name"], "attrition_annualised_pct", attr)
                 self.kpi(m, "org_unit", ou["org_unit_id"], ou["name"], "engagement_score", eng)
-            ou["attrition_annualised_pct"] = round(22.0 if talent else base_attr, 1)
-            ou["engagement_score"] = round(base_eng - 11 if talent else base_eng, 1)
+            ou["attrition_annualised_pct"] = round(15.0 if talent else base_attr, 1)
+            ou["engagement_score"] = round(base_eng - 4 if talent else base_eng, 1)
             ou["cost_per_fte"] = round(self.rng.uniform(52000, 98000), -2)
             if talent:
                 self.talent_unit = ou
@@ -205,7 +192,7 @@ class Twin:
         for j, f in enumerate(corporate):
             hc = max(5, int(employees * corp_share / len(corporate)))
             ou = {"org_unit_id": f"OU{len(units) + j + 1}", "name": f"Group — {f}", "bu_id": None, "function": f,
-                  "headcount": hc, "manager": self.person(self.used_names), "open_roles": int(hc * 0.02),
+                  "headcount": hc, "manager": f"Group head of {f}", "open_roles": int(hc * 0.02),
                   "attrition_annualised_pct": round(self.rng.uniform(7, 11), 1),
                   "engagement_score": round(self.rng.uniform(68, 77), 1), "cost_per_fte": round(self.rng.uniform(60000, 110000), -2)}
             self.org_units.append(ou)
@@ -223,14 +210,18 @@ class Twin:
                    "annual_revenue": round(self.rev * s["share"], 2),
                    "customers": int(self.rev * s["share"] / arpu), "arpu": round(arpu, 2),
                    "base_churn": float(s["churn_monthly_pct"]), "base_nps": float(s["nps"])}
-            hit = i == 1
+            hit, loyal = i == 1, i == 0
             for k, m in enumerate(self.months):
-                churn = ramp(seg["base_churn"], seg["base_churn"] * 2.2, k, n, n - 3) if hit else seg["base_churn"] * self.noise(0.08)
-                nps = ramp(seg["base_nps"], seg["base_nps"] - 12, k, n, n - 3) if hit else seg["base_nps"] + self.rng.uniform(-2, 2)
+                churn = (ramp(seg["base_churn"], seg["base_churn"] * 1.5, k, n, n - 3) if hit
+                         else ramp(seg["base_churn"], seg["base_churn"] * 0.8, k, n, n - 6) if loyal
+                         else seg["base_churn"] * self.noise(0.08))
+                nps = (ramp(seg["base_nps"], seg["base_nps"] - 6, k, n, n - 3) if hit
+                       else ramp(seg["base_nps"], seg["base_nps"] + 7, k, n, n - 6) if loyal
+                       else seg["base_nps"] + self.rng.uniform(-2, 2))
                 self.kpi(m, "segment", seg["segment_id"], seg["name"], "churn_monthly_pct", churn)
                 self.kpi(m, "segment", seg["segment_id"], seg["name"], "nps", nps)
-            seg["churn_monthly_pct"] = round(seg["base_churn"] * (2.2 if hit else 1), 2)
-            seg["nps"] = round(seg["base_nps"] - (12 if hit else 0), 1)
+            seg["churn_monthly_pct"] = round(seg["base_churn"] * (1.5 if hit else 0.8 if loyal else 1), 2)
+            seg["nps"] = round(seg["base_nps"] - 6 if hit else seg["base_nps"] + 7 if loyal else seg["base_nps"], 1)
             self.segments.append(seg)
             self.add("customer_segments", {k: v for k, v in seg.items() if not k.startswith("base_")})
 
@@ -272,18 +263,20 @@ class Twin:
             volume = max(50, int(self.rev / 1e6 * self.rng.uniform(4, 40)))
             proc = {"process_id": f"P{i + 1}", "name": name, "unit": unit, "owner_bu_id": owner["bu_id"],
                     "target_cycle_hours": cycle, "sla_target_pct": round(sla * 100, 1), "monthly_volume": volume}
-            hit = i == 1
+            hit, improving = i == 1, i == 0
             base_sla = sla * 100 + 0.6
             for k, m in enumerate(self.months):
-                ct = cycle * (ramp(1, 1.45, k, n, n - 3) if hit else self.rng.uniform(0.92, 1.05))
-                backlog = volume * 0.18 * (ramp(1, 2.1, k, n, n - 3) if hit else self.noise(0.1))
-                attain = ramp(base_sla, base_sla - 13, k, n, n - 3) if hit else min(99.8, base_sla + self.rng.uniform(-1, 0.8))
+                ct = cycle * (ramp(1, 1.3, k, n, n - 3) if hit else ramp(1, 0.86, k, n, n - 6) if improving else self.rng.uniform(0.92, 1.05))
+                backlog = volume * 0.18 * (ramp(1, 1.6, k, n, n - 3) if hit else self.noise(0.1))
+                attain = (ramp(base_sla, base_sla - 7, k, n, n - 3) if hit
+                          else min(99.8, ramp(base_sla, base_sla + 1.4, k, n, n - 6)) if improving
+                          else min(99.8, base_sla + self.rng.uniform(-1, 0.8)))
                 self.kpi(m, "process", proc["process_id"], name, "cycle_time_hours", ct)
                 self.kpi(m, "process", proc["process_id"], name, "backlog", backlog)
                 self.kpi(m, "process", proc["process_id"], name, "sla_attainment_pct", attain)
                 self.kpi(m, "process", proc["process_id"], name, "volume", volume * self.noise(0.06))
-            proc["current_cycle_hours"] = round(cycle * (1.45 if hit else 1), 1)
-            proc["current_sla_attainment_pct"] = round(base_sla - (13 if hit else 0), 1)
+            proc["current_cycle_hours"] = round(cycle * (1.3 if hit else 0.86 if improving else 1), 1)
+            proc["current_sla_attainment_pct"] = round(base_sla - 7 if hit else min(99.8, base_sla + 1.4) if improving else base_sla, 1)
             self.processes.append(proc)
             self.add("processes", proc)
 
@@ -300,12 +293,12 @@ class Twin:
                    "supports_process_id": "P2" if i == 0 else None}
             hit = i == 0
             for k, m in enumerate(self.months):
-                lt = base_lt * (ramp(1, 1.6, k, n, n - 3) if hit else self.noise(0.06))
-                otd = ramp(96, 79, k, n, n - 3) if hit else self.rng.uniform(92, 98)
+                lt = base_lt * (ramp(1, 1.35, k, n, n - 3) if hit else self.noise(0.06))
+                otd = ramp(96, 86, k, n, n - 3) if hit else self.rng.uniform(92, 98)
                 self.kpi(m, "supplier", sup["supplier_id"], name, "lead_time_days", lt)
                 self.kpi(m, "supplier", sup["supplier_id"], name, "on_time_delivery_pct", otd)
-            sup["current_lead_time_days"] = round(base_lt * (1.6 if hit else 1), 1)
-            sup["risk_score"] = 78 if hit else int(self.rng.uniform(15, 45))
+            sup["current_lead_time_days"] = round(base_lt * (1.35 if hit else 1), 1)
+            sup["risk_score"] = 64 if hit else int(self.rng.uniform(15, 45))
             self.suppliers.append(sup)
             self.add("suppliers", sup)
         for region in self.tables["regions"]:
@@ -323,9 +316,13 @@ class Twin:
         target_ebitda = float(self.c.get("ebitda_margin_target_pct", 10)) / 100
         hit_bu_rev = self.bus[1] if len(self.bus) > 1 else self.bus[0]
         self.fin = []
+        self.strong_bu = self.bus[-1] if len(self.bus) > 2 else self.bus[0]
         for bu in self.bus:
-            growth = bu["growth_target_pct"] / 100 - self.rng.uniform(0.005, 0.02)
-            ebitda_m = target_ebitda * self.rng.uniform(0.8, 1.05)
+            # The unit hit by the disruption trails its plan; the others are on or ahead of plan.
+            behind = bu is hit_bu_rev
+            growth = bu["growth_target_pct"] / 100 + (-self.rng.uniform(0.003, 0.01) if behind
+                                                       else 0.025 if bu is self.strong_bu else self.rng.uniform(0.002, 0.01))
+            ebitda_m = target_ebitda * self.rng.uniform(0.95, 1.03)
             for k, m in enumerate(self.months):
                 mon = int(m[5:7])
                 years_back = (n - 1 - k) / 12
@@ -333,7 +330,7 @@ class Twin:
                 budget_rev = base * (1 + bu["growth_target_pct"] / 100) ** (-years_back + 1 / 12)
                 revenue = base * (1 + growth) ** (-years_back + 1 / 12) * self.noise(0.015)
                 if bu is hit_bu_rev and k >= n - 3:
-                    revenue *= 1 - 0.015 * (k - n + 4)
+                    revenue *= 1 - 0.006 * (k - n + 4)
                 gm = bu["margin_pct"] / 100
                 if bu is self.bus[0] and k >= n - 3:
                     gm -= 0.043 * self.margin_product["revenue_share_of_bu"] * (k - n + 4) / 3
@@ -341,10 +338,6 @@ class Twin:
                 budget_opex = budget_rev * (bu["margin_pct"] / 100 - target_ebitda)
                 marketing_budget = budget_opex * 0.18
                 marketing = opex * 0.18
-                if bu is self.bus[0] and k >= n - 6:
-                    over = [0.06, 0.09, 0.12, 0.14, 0.15, 0.16][k - (n - 6)]
-                    marketing = marketing_budget * (1 + over)
-                    opex = opex - opex * 0.18 + marketing
                 row = {"month": m, "bu_id": bu["bu_id"], "revenue": round(revenue, 2), "budget_revenue": round(budget_rev, 2),
                        "gross_margin_pct": round(gm * 100, 2), "cogs": round(revenue * (1 - gm), 2),
                        "opex": round(opex, 2), "budget_opex": round(budget_opex, 2),
@@ -386,12 +379,11 @@ class Twin:
 
     def leadership_extras(self) -> None:
         for role, title in [("CRO", "Chief Risk Officer"), ("CSO", "Chief Strategy Officer")]:
-            name = self.person(self.used_names, self.rng2)
-            self.leaders[role] = name
-            self.add("leadership", {"role": role, "title": title, "name": name})
+            self.leaders[role] = title
+            self.add("leadership", {"role": role, "title": title, "name": title})
         for ou in self.tables["org_units"]:
             talent = ou is getattr(self, "talent_unit", None)
-            ou["utilization_pct"] = 97.0 if talent else round(self.rng2.uniform(72, 93), 1)
+            ou["utilization_pct"] = 92.0 if talent else round(self.rng2.uniform(72, 90), 1)
 
     def fx_layer(self) -> None:
         base_eur = FX_PER_EUR.get(self.base, 1.0)
@@ -434,12 +426,6 @@ class Twin:
         n_acc = 36
         weights = [1 / (i + 1) ** 0.9 for i in range(n_acc)]
         total_w = sum(weights)
-        names, used = [], set()
-        while len(names) < n_acc:
-            nm = f"{self.rng2.choice(ACCOUNT_PREFIXES)} {self.rng2.choice(self.x['account_suffixes'])}"
-            if nm not in used:
-                used.add(nm)
-                names.append(nm)
         regions = self.tables["regions"]
         affected_ranks = [0, 2, 3, 5, 8, 11, 14]
         renewing = {0: 38, 2: 21, 3: 55, 5: 47, 8: 29}
@@ -455,17 +441,23 @@ class Twin:
             acv = acv_base * self.fx_now[cur]
             affected = i in affected_ranks
             seg = segs[i % len(segs)]
-            penalty_h = acv * 0.00003  # ~0.003% of contract value per hour in breach
+            kind = self.rng2.choice(self.x["account_suffixes"])
+            tier = "Platinum" if i < 8 else "Gold" if i < 22 else "Silver"
+            # A descriptive label, never a company name: "Platinum account · Pharmacies · Germany"
+            label = f"{tier} account · {kind} · {region['name']}"
+            same = sum(1 for a in self.accounts if a["name"].startswith(label))
+            label = f"{label} {same + 1}" if same else label
+            penalty_h = acv * 0.00002  # ~0.002% of contract value per hour in breach
             hours = 24 * self.rng2.uniform(5, 9) if affected else 0
-            acc = {"account_id": f"ACC{i + 1:03d}", "name": names[i], "industry": names[i].split(" ", 1)[1],
+            acc = {"account_id": f"ACC{i + 1:03d}", "name": label, "industry": kind,
                    "segment_id": seg["segment_id"], "region": region["name"], "currency": cur,
-                   "tier": "Platinum" if i < 8 else "Gold" if i < 22 else "Silver",
+                   "tier": tier,
                    "annual_contract_value": round(acv, 2), "annual_contract_value_base": round(acv_base, 2),
                    "renewal_in_days": renewing.get(i, int(self.rng2.uniform(75, 360)) if not affected else int(self.rng2.uniform(90, 200))),
-                   "health_score": round(self.rng2.uniform(40, 55) if affected else self.rng2.uniform(68, 92)),
-                   "nps": round(self.rng2.uniform(2, 18) if affected else self.rng2.uniform(28, 58)),
-                   "churn_risk_pct": round(self.rng2.uniform(35, 62) if affected else self.rng2.uniform(4, 16), 1),
-                   "account_owner": self.person(self.used_names, self.rng2),
+                   "health_score": round(self.rng2.uniform(55, 66) if affected else self.rng2.uniform(70, 92)),
+                   "nps": round(self.rng2.uniform(14, 26) if affected else self.rng2.uniform(30, 58)),
+                   "churn_risk_pct": round(self.rng2.uniform(22, 38) if affected else self.rng2.uniform(4, 14), 1),
+                   "account_owner": f"Account director, {region['name']}",
                    "contact_role": self.rng2.choice(self.x["contact_roles"]),
                    "sla_penalty_per_hour": round(penalty_h, 2), "sla_penalty_cap": round(acv * 0.15, 2),
                    "sla_hours_in_breach": round(hours, 1), "sla_penalty_accrued": round(penalty_h * hours, 2),
@@ -494,8 +486,8 @@ class Twin:
                                "process_id": proc["process_id"], "system_id": None, "started_days_ago": 8,
                                "resolved_days_ago": None, "accounts_affected": len(self.affected),
                                "sla_penalties_per_hour_base": round(burn_h, 2)})
-        self.add("incidents", {"incident_id": "INC-288", "severity": "SEV1", "status": "resolved",
-                               "title": f"{self.spof['name']} brownout — capacity exhausted at month-end peak",
+        self.add("incidents", {"incident_id": "INC-288", "severity": "SEV2", "status": "resolved",
+                               "title": f"{self.spof['name']} slowdown at the month-end peak",
                                "process_id": self.spof["supports_processes"].split(", ")[0], "system_id": self.spof["system_id"],
                                "started_days_ago": 26, "resolved_days_ago": 26, "accounts_affected": 11,
                                "sla_penalties_per_hour_base": 0.0})
@@ -560,7 +552,7 @@ class Twin:
         name, unit, cur, thr, monthly, _ = self.x["regulatory_buffer"]
         buffer(name, "company", "GROUP", unit, cur, thr, monthly / 4.3, True)
         t = self.talent_unit
-        buffer(f"{t['name']} workload capacity", "org_unit", t["org_unit_id"], "% utilised", 100 - 97.0, 0.0, -0.5, False, "SIG5")
+        buffer(f"{t['name']} workload capacity", "org_unit", t["org_unit_id"], "% spare", 100 - 92.0, 0.0, -0.5, False)
 
     def playbooks_and_costs(self) -> None:
         s1, proc, alt = self.suppliers[0], self.processes[1], self.alt_supplier
@@ -627,52 +619,54 @@ class Twin:
         for i, (reg, scope) in enumerate(self.a["regulations"]):
             self.add("policies", {"policy_id": f"REG{i + 1}", "type": "regulation", "name": reg, "rule": scope})
         self.add("policies", {"policy_id": "DOA", "type": "internal", "name": "Delegation of authority",
-                              "rule": "Decisions are taken within the limits in decision_rights.yaml; above them, the named executive approves."})
+                              "rule": "Decisions are taken within the limits in decision_rights.yaml; above them, the human in the loop named there approves."})
         for i, (title, layer) in enumerate(self.a["risks"]):
             self.add("risks", {"risk_id": f"RK{i + 1}", "title": title, "category": layer,
                                "likelihood": self.rng.randint(2, 4), "impact": self.rng.randint(3, 5),
                                "owner": self.leaders[self.rng.choice(["CFO", "COO", "CCO", "CTO"])], "status": "monitored"})
 
     def add_signals(self) -> None:
-        bu0 = self.bus[0]
-        seg = self.segments[1]
-        proc = self.processes[1]
+        """A balanced picture: strengths, risks to watch and opportunities. SIG1 -> SIG2 -> SIG3/SIG7/SIG8 is the live
+        supplier -> process -> customer chain the four agents work on; SIG4-SIG6 are strengths; SIG10 is a growth play."""
+        seg, loyal = self.segments[1], self.segments[0]
+        proc, good_proc = self.processes[1], self.processes[0]
         sup = self.suppliers[0]
-        ou = self.talent_unit
-        fin_bu0 = [r for r in self.fin if r["bu_id"] == bu0["bu_id"]][-6:]
-        overspend = sum(r["marketing_opex"] - r["budget_marketing_opex"] for r in fin_bu0)
-        over_pct = 100 * overspend / sum(r["budget_marketing_opex"] for r in fin_bu0)
-        mp = self.margin_product
-        lt_up = 60  # planted increase (rounded lead times would show 55-65%)
+        strong = self.strong_bu
+        last12, prev12 = self.months[-12:], self.months[-24:-12]
+        r_now = sum(r["revenue"] for r in self.fin if r["bu_id"] == strong["bu_id"] and r["month"] in last12)
+        r_prev = sum(r["revenue"] for r in self.fin if r["bu_id"] == strong["bu_id"] and r["month"] in prev12)
+        strong_growth = 100 * (r_now / r_prev - 1)
+        lt_up = 35  # planted increase (rounded lead times show 30-40%)
         self.signals = [
-            {"signal_id": "SIG1", "severity": "high", "layer": "supply chain", "entity_type": "supplier",
+            {"signal_id": "SIG1", "severity": "medium", "layer": "supply chain", "entity_type": "supplier",
              "entity_id": sup["supplier_id"], "title": f"{sup['name']} lead times up {lt_up}%",
-             "detail": f"Lead time {sup['baseline_lead_time_days']:.1f} → {sup['current_lead_time_days']:.1f} days over 3 months; on-time delivery 96% → 79%. "
-                       f"{sup['dependency_pct']:.0f}% of {sup['category']} spend; it supports '{proc['name']}'.",
+             "detail": f"Lead time {sup['baseline_lead_time_days']:.1f} → {sup['current_lead_time_days']:.1f} days over 3 months; on-time delivery 96% → 86%. "
+                       f"{sup['dependency_pct']:.0f}% of {sup['category']} spend; it supports '{proc['name']}'. A qualified standby supplier exists.",
              "detected_days_ago": 11, "caused_by": None},
             {"signal_id": "SIG2", "severity": "high", "layer": "operations", "entity_type": "process",
-             "entity_id": proc["process_id"], "title": f"{proc['name']} cycle time up 45%",
-             "detail": f"{proc['target_cycle_hours']}h → {proc['current_cycle_hours']}h; backlog 2.1× normal; SLA attainment "
-                       f"{proc['current_sla_attainment_pct'] + 13:.1f}% → {proc['current_sla_attainment_pct']:.1f}% (target {proc['sla_target_pct']}%).",
+             "entity_id": proc["process_id"], "title": f"{proc['name']} cycle time up 30%",
+             "detail": f"{proc['target_cycle_hours']}h → {proc['current_cycle_hours']}h; backlog 1.6× normal; SLA attainment "
+                       f"{proc['current_sla_attainment_pct'] + 7:.1f}% → {proc['current_sla_attainment_pct']:.1f}% (target {proc['sla_target_pct']}%).",
              "detected_days_ago": 8, "caused_by": "SIG1"},
-            {"signal_id": "SIG3", "severity": "high", "layer": "customers", "entity_type": "segment",
+            {"signal_id": "SIG3", "severity": "medium", "layer": "customers", "entity_type": "segment",
              "entity_id": seg["segment_id"], "title": f"Churn in {seg['name']} up from {seg['base_churn']:.1f}% to {seg['churn_monthly_pct']:.1f}% a month",
-             "detail": f"NPS {seg['base_nps']:.0f} → {seg['nps']:.0f}; complaints cite '{proc['name']}' delays. "
+             "detail": f"NPS {seg['base_nps']:.0f} → {seg['nps']:.0f}; feedback mentions '{proc['name']}' delays. "
                        f"{seg['customers']:,} customers, {self.money(seg['annual_revenue'])} annual revenue.",
              "detected_days_ago": 5, "caused_by": "SIG2"},
-            {"signal_id": "SIG4", "severity": "medium", "layer": "products", "entity_type": "product_line",
-             "entity_id": mp["product_line_id"], "title": f"Gross margin on {mp['name']} down 4.3 pts in 3 months",
-             "detail": f"Unit cost up {100 * 0.043 / (1 - mp['base_margin']):.1f}% while the list price is unchanged; "
-                       f"{mp['name']} is the largest line in {bu0['name']} ({self.money(mp['annual_revenue'])} a year).",
-             "detected_days_ago": 14, "caused_by": None},
-            {"signal_id": "SIG5", "severity": "medium", "layer": "people", "entity_type": "org_unit",
-             "entity_id": ou["org_unit_id"], "title": f"{ou['name']} attrition at 22% (annualised)",
-             "detail": f"Up from {self.talent_base[0]:.0f}%; {ou['open_roles']} open roles; engagement {self.talent_base[1]:.0f} → {ou['engagement_score']:.0f}/100.",
-             "detected_days_ago": 20, "caused_by": None},
-            {"signal_id": "SIG6", "severity": "medium", "layer": "finance", "entity_type": "business_unit",
-             "entity_id": bu0["bu_id"], "title": f"{bu0['name']} marketing {over_pct:.0f}% over budget (last 6 months)",
-             "detail": f"{self.money(overspend)} above plan; spend rising every month while revenue tracks budget.",
-             "detected_days_ago": 3, "caused_by": None},
+            {"signal_id": "SIG4", "severity": "strength", "layer": "finance", "entity_type": "business_unit",
+             "entity_id": strong["bu_id"], "title": f"{strong['name']} growing {strong_growth:.1f}% — ahead of its {strong['growth_target_pct']:.1f}% plan",
+             "detail": f"{100 * strong['revenue_share']:.0f}% of revenue; gross margin on target. A unit to learn from and invest behind.",
+             "detected_days_ago": 7, "caused_by": None},
+            {"signal_id": "SIG5", "severity": "strength", "layer": "customers", "entity_type": "segment",
+             "entity_id": loyal["segment_id"], "title": f"{loyal['name']}: NPS up to {loyal['nps']:.0f} and churn down to {loyal['churn_monthly_pct']:.2f}% a month",
+             "detail": f"Best in two years (NPS was {loyal['base_nps']:.0f}, churn {loyal['base_churn']:.2f}%); {loyal['customers']:,} customers, "
+                       f"{self.money(loyal['annual_revenue'])} annual revenue — the most loyal part of the base.",
+             "detected_days_ago": 10, "caused_by": None},
+            {"signal_id": "SIG6", "severity": "strength", "layer": "operations", "entity_type": "process",
+             "entity_id": good_proc["process_id"], "title": f"{good_proc['name']} 14% faster, SLA at {good_proc['current_sla_attainment_pct']:.1f}%",
+             "detail": f"{good_proc['target_cycle_hours']}h → {good_proc['current_cycle_hours']}h over six months, above its {good_proc['sla_target_pct']}% target — "
+                       f"a playbook other processes could reuse.",
+             "detected_days_ago": 12, "caused_by": None},
         ]
         spof_days = next(b["days_to_breach"] for b in self.tables["buffers"] if b["entity_id"] == self.spof["system_id"])
         renew = [a for a in self.affected if a["renewal_in_days"] <= 60]
@@ -685,18 +679,20 @@ class Twin:
         self.signals += [
             {"signal_id": "SIG7", "severity": "high", "layer": "customers", "entity_type": "accounts",
              "entity_id": ", ".join(a["account_id"] for a in renew),
-             "title": f"{len(renew)} key accounts worth {self.money(renew_acv)} a year renew within 60 days — all hit by {proc['name']} delays",
-             "detail": f"{len(self.affected)} key accounts have work breaching SLA in '{proc['name']}'; their health scores are 40-55 and churn risk 35-62%.",
+             "title": f"{len(renew)} key accounts worth {self.money(renew_acv)} a year renew within 60 days — affected by {proc['name']} delays",
+             "detail": f"{len(self.affected)} key accounts have work outside SLA in '{proc['name']}'; health scores 55-66 and churn risk 22-38% "
+                       f"(the rest of the key accounts are healthy).",
              "detected_days_ago": 4, "caused_by": "SIG2"},
-            {"signal_id": "SIG8", "severity": "high", "layer": "finance", "entity_type": "accounts",
+            {"signal_id": "SIG8", "severity": "medium", "layer": "finance", "entity_type": "accounts",
              "entity_id": ", ".join(a["account_id"] for a in self.affected),
              "title": f"SLA penalties accruing at {self.money(burn)} an hour across {len(self.affected)} contracts",
-             "detail": f"{self.money(accrued)} accrued so far, in {', '.join(currencies)}; penalties keep compounding until '{proc['name']}' recovers.",
+             "detail": f"{self.money(accrued)} accrued so far, in {', '.join(currencies)}; they stop once '{proc['name']}' is back within SLA.",
              "detected_days_ago": 6, "caused_by": "SIG2"},
-            {"signal_id": "SIG9", "severity": "high", "layer": "operations", "entity_type": "system",
+            {"signal_id": "SIG9", "severity": "medium", "layer": "operations", "entity_type": "system",
              "entity_id": self.spof["system_id"],
-             "title": f"{self.spof['name']} headroom at {self.spof['capacity_headroom_pct']:.0f}% — breaches the 5% floor in ~{spof_days:.0f} days",
-             "detail": f"Single point of failure with no failover; supports {self.spof['supports_processes']}. It browned out at the last month-end peak (INC-288).",
+             "title": f"{self.spof['name']} headroom at {self.spof['capacity_headroom_pct']:.0f}% — reaches the 5% floor in ~{spof_days:.0f} days",
+             "detail": f"No failover yet; supports {self.spof['supports_processes']}. It slowed down at the last month-end peak (INC-288) — "
+                       f"time to add capacity before the next one.",
              "detected_days_ago": 2, "caused_by": None},
             {"signal_id": "SIG10", "severity": "opportunity", "layer": "strategy", "entity_type": "region",
              "entity_id": self.growth["region"],
@@ -709,7 +705,7 @@ class Twin:
             self.add("signals", s)
         self.add("risks", {"risk_id": f"RK{len(self.tables['risks']) + 1}",
                            "title": f"Dependency on {sup['name']} ({sup['dependency_pct']:.0f}% of {sup['category']})",
-                           "category": "Supply chain", "likelihood": 4, "impact": 4, "owner": self.leaders["COO"],
+                           "category": "Supply chain", "likelihood": 3, "impact": 4, "owner": self.leaders["COO"],
                            "status": "escalated"})
 
     # -- output ----------------------------------------------------------------
@@ -766,13 +762,18 @@ class Twin:
             f"(target {c.get('ebitda_margin_target_pct')}%)",
             "",
             "## Business units",
-            *[f"- **{b['name']}** ({b['head']}) — {100 * b['revenue_share']:.0f}% of revenue; products: {', '.join(b['products'])}" for b in self.bus],
+            *[f"- **{b['name']}** — {100 * b['revenue_share']:.0f}% of revenue; products: {', '.join(b['products'])}" for b in self.bus],
             "",
-            "## Leadership (synthetic names)",
-            *[f"- {r['role']}: {r['name']}" for r in self.tables["leadership"]],
+            "People appear in the twin as roles only (e.g. Chief Operating Officer); key accounts as segment labels.",
             "",
-            "## Signals the agent should investigate",
-            *[f"- **{s['signal_id']} [{s['severity']}] {s['title']}** — {s['detail']}" for s in self.signals],
+            "## What is going well",
+            *[f"- **{s['signal_id']} {s['title']}** — {s['detail']}" for s in self.signals if s["severity"] in ('strength',)],
+            "",
+            "## Risks to watch",
+            *[f"- **{s['signal_id']} {s['title']}** — {s['detail']}" for s in self.signals if s["severity"] in ('high', 'medium')],
+            "",
+            "## Opportunities",
+            *[f"- **{s['signal_id']} {s['title']}** — {s['detail']}" for s in self.signals if s["severity"] in ('opportunity',)],
             "",
             f"Data covers {self.months[0]} to {self.months[-1]}. Tables: {', '.join(sorted(self.tables))}.",
         ]

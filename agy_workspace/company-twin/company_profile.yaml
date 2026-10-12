@@ -1,6 +1,6 @@
 # Company profile for the digital twin generator.
 # Replace it with your own company (Play 2, Step 1), then run:  .venv/bin/python company-twin/generate_twin.py
-# Use rounded public figures. Never put real people's names here — leadership names are generated.
+# Use rounded public figures. Never put people's names here — the twin uses roles and segment labels only.
 
 company:
   name: Altostrat

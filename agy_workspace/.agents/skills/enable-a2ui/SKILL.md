@@ -20,9 +20,15 @@ You need **both** of these or you'll just see raw JSON:
 
 `A2uiSchemaManager` / `BasicCatalog` (Step 2) come from the **`a2ui-agent-sdk`** package:
 
+Projects scaffolded by agents-cli 1.7 depend on `a2a-sdk>=1.0`, while `a2ui-agent-sdk` 0.4 declares
+`a2a-sdk<0.4`, so a plain `uv add` fails to resolve. Add the override first, then the SDK — both in one go:
+
 ```bash
+grep -q '^\[tool.uv\]' pyproject.toml || printf '\n[tool.uv]\noverride-dependencies = ["a2a-sdk>=1.0,<2"]\n' >> pyproject.toml
 uv add "a2ui-agent-sdk>=0.4.0,<0.5.0"
 ```
+
+(Verified in rehearsal: the agent and its tests run with this override.)
 
 - **Name trap:** the package is `a2ui-agent-sdk`, but you **import** it as `a2ui`
   (`from a2ui.schema.manager import ...`). Don't `pip install a2ui` or add a bare
@@ -90,7 +96,18 @@ root_agent = Agent(
 )
 ```
 
-## Step 4 — Test in adk web
+## Step 4 — Verify once, quickly (≈30–60 s)
+
+From the agent project, run the bundled check — one question, in-process, no server:
+
+```bash
+uv run python ../.agents/skills/enable-a2ui/scripts/check_a2ui.py
+```
+
+`PASS` means the agent returned renderable A2UI messages: you are done testing. Do **not** also run the project's
+test suite, curl the server, or take screenshots for this step. On `FAIL`, fix what it prints and run it again.
+
+## Step 5 — Show it in adk web
 
 ```bash
 uv run adk web --port 8080 --allow_origins "*" --reload_agents
@@ -100,7 +117,7 @@ uv run adk web --port 8080 --allow_origins "*" --reload_agents
 > your project deps and fails at startup (`cannot import name 'firestore' from
 > 'google.cloud'` / `ModuleNotFound`). `uv run` uses the project `.venv`.
 
-Start a **New Session** and ask for something visual — you should see a card, not
+Restart the Playground, start a **New Session** and ask for something visual — you should see a card, not
 JSON. **Turn Token Streaming OFF** first (dev UI gear icon): with it on, adk web
 shows the raw streamed JSON and never swaps in the card.
 

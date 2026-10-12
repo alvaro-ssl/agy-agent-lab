@@ -1,6 +1,6 @@
 # Track 1: AGY — Google Antigravity Exercises
 
-Welcome to **Track 1** of the CxO Leaders Exchange. Technical leaders direct autonomous engineering agents in **Google Antigravity (AGY)** — `/browser`, `/plan`, `/goal`, `/learn`, `/schedule` — and then build, red-team and govern a production operations agent with the **Google Agents CLI (`agents-cli` / ADK)** skills.
+Welcome to **Track 1** of the CxO Leaders Exchange. Technical leaders direct autonomous engineering agents in **Google Antigravity (AGY)** — `/browser`, `/plan`, `/goal`, `/learn`, `/schedule` — and then design, build and evaluate an autonomous agent for their own company with the **Google Agents CLI (`agents-cli` / ADK)** skills.
 
 The two plays are independent:
 - **Play 1** — the reporting system is down: Cymbal's **Platform Reliability Control Tower**, the system leadership runs the business on, knocked out by Friday's v1.4.0 release.
@@ -35,7 +35,7 @@ The two plays are independent:
 │   │   ├── decision_rights.yaml           # What the agent may decide alone / with which executive / never
 │   │   ├── twin_tools.py                  # Agent tools and the four agent types' toolsets (resilience, margin, customer, growth)
 │   │   └── inbox_app.py, static/          # Company Twin overview + Decision Inbox on :8090
-│   └── eval-kit/                          # Play 2 Step 5: decision-governance eval (5 cases + deterministic metric)
+│   └── eval-kit/                          # Play 2 Step 5: eval metrics + example cases
 └── utils/                                 # Facilitators only
     ├── lab-agy-gdoc.md                    # Executive briefing & copy-paste prompts for both plays
     ├── WORKSHOP_GUIDE.md                  # Run of show, timings and facilitator notes
@@ -44,7 +44,7 @@ The two plays are independent:
     ├── cymbal-control-tower.bundle        # Git bundle with the v1.3.0 -> v1.4.0 history
     ├── run_agy_lab.sh                     # Runs every prompt in one Antigravity session on a throwaway copy
     ├── test_workshop_e2e.py               # Verifies the exercise is intact
-    └── reference/                         # Answer keys, reference agent, example spec, Step 5 fix, screenshots
+    └── reference/                         # Answer keys, reference agent, example spec, hardened take_action, screenshots
 ```
 
 ---
@@ -54,7 +54,7 @@ The two plays are independent:
 | Play | Focus | Key commands & skills | Outcome |
 | :--- | :--- | :--- | :--- |
 | **Play 1 (15 min)** | **Command an autonomous engineering team** | `/browser`, `/plan`, `/goal` (parallel subagents), `/learn`, `/schedule` (optional) | See and diagnose the broken dashboard, get a plan, approve it into parallel backend/frontend subagents, verify with a real-browser screenshot, add a release gate to enforce governance next time and watch it hold, optionally schedule a CTO briefing. |
-| **Play 2 (30 min)** | **Design and build an autonomous agent for your company's digital twin** | `/company-twin`, `/grill-me`, "Use agents-cli to build…" (workflow + scaffold), `/google-agents-cli-eval`, `/enable-a2ui`, `/memory-bank-setup` | Reshape the twin into your company, pick and design one of four agents, build it with one sentence, let it work — alone where allowed, through the Decision Inbox where not — then red-team the human approvals and enforce them in code; optionally add executive cards and long-term memory. |
+| **Play 2 (30 min)** | **Design and build an autonomous agent for your company's digital twin** | `/company-twin`, `/grill-me`, "Use agents-cli to build…" (workflow + scaffold), `/google-agents-cli-eval`, `/enable-a2ui`, `/memory-bank-setup` | Reshape the twin into your company, pick and design one of four agents, build it with one sentence, let it work — alone where allowed, through the Decision Inbox where not — then evaluate it with agents-cli; optionally add executive cards and long-term memory. |
 
 ---
 

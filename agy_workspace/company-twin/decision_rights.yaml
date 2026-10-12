@@ -7,12 +7,12 @@
 #   threshold   — autonomous up to `autonomous_up_to` (in `unit`); above that, `approver` must approve
 #   approval    — always needs `approver`
 #   forbidden   — the agent must never do this
-# approver is a leadership role (CEO, CFO, COO, CCO, CHRO, CTO, CRO, CSO); names come from the twin's leadership table.
+# approver is a leadership role (CEO, CFO, COO, CCO, CHRO, CTO, CRO, CSO); titles come from the twin's leadership table (roles only, no names).
 # unit: currency (money in the company's currency), pct (absolute % change), or none.
 
 agent:
   type: undecided              # operational_resilience | margin_guardian | customer_rescue | growth_scout
-  sponsor: undecided
+  sponsor: undecided            # the human in the loop: the role that owns the process (e.g. COO, CFO)
   scope: To be agreed in /grill-me.
 
 default:                       # any action not listed below

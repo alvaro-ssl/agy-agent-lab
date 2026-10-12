@@ -113,7 +113,7 @@ function renderHeader(o) {
   document.getElementById("period-chip").textContent = `${o.period.first} → ${o.period.last}`;
   const agent = o.agent || {};
   document.getElementById("agent-chip").textContent =
-    agent.type && agent.type !== "undecided" ? `Agent: ${label(agent.type)} · ${agent.sponsor}` : "Agent: not designed yet";
+    agent.type && agent.type !== "undecided" ? `Agent: ${label(agent.type)} · human in the loop: ${agent.sponsor}` : "Agent: not designed yet";
   document.getElementById("updated").textContent = `Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
 }
 
@@ -134,7 +134,7 @@ function status(ok, okText, badText) {
 
 function renderKpis(o, approvals) {
   const k = o.kpis;
-  const high = o.signals.filter((s) => s.severity === "high").length;
+  const count = (sev) => o.signals.filter((s) => sev.includes(s.severity)).length;
   const pending = approvals.filter((a) => a.status === "PENDING").length;
   document.getElementById("kpis").replaceChildren(
     kpiTile("Revenue · last 12 months", money(k.revenue_last_12m), [
@@ -147,8 +147,12 @@ function renderKpis(o, approvals) {
     ]),
     kpiTile("People", k.headcount.toLocaleString(), ["employees across all units"]),
     kpiTile("Customers", k.customers.toLocaleString(), [`${k.weighted_churn_pct}% monthly churn`]),
-    kpiTile("Open signals", String(o.signals.length), [el("span", { class: "pill pill-high", text: `${high} high` })]),
-    kpiTile("Decisions waiting", String(pending), [pending ? "for an executive in the inbox" : "nothing waiting"]),
+    kpiTile("Signals", String(o.signals.length), [
+      el("span", { class: "pill pill-strength", text: `${count(["strength"])} going well` }),
+      el("span", { class: "pill pill-medium", text: `${count(["high", "medium", "low"])} to watch` }),
+      el("span", { class: "pill pill-opportunity", text: `${count(["opportunity"])} opportunity` }),
+    ]),
+    kpiTile("Decisions waiting", String(pending), [pending ? "for the human in the loop" : "nothing waiting"]),
   );
 }
 

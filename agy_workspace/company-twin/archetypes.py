@@ -299,23 +299,9 @@ ARCHETYPES: dict[str, dict] = {
 
 ARCHETYPE_NAMES = sorted(ARCHETYPES)
 
-# Synthetic leadership names — the twin never uses real people's names.
-FIRST_NAMES = [
-    "Amara", "Lukas", "Sofia", "Mateo", "Hannah", "Ravi", "Elena", "Jonas", "Yara", "Tomasz", "Ines", "Kenji",
-    "Freya", "Omar", "Clara", "Dario", "Nadia", "Pieter", "Leila", "Marek", "Aoife", "Bruno", "Selin", "Viktor",
-    "Maja", "Idris", "Lucía", "Henrik", "Zara", "Felix", "Noor", "Emil", "Camille", "Tariq", "Greta", "Rafael",
-    "Ana", "Oskar", "Priyanka", "Luca",
-]
-LAST_NAMES = [
-    "Lindqvist", "Moreau", "Kowalski", "Okafor", "Brennan", "Castillo", "Varga", "Nakamura", "Haddad", "Schreiber",
-    "Rossi", "Andersen", "Petrov", "Dubois", "Novak", "Silva", "Bergström", "Meyer", "Costa", "Fischer",
-    "Mendes", "Kaya", "Horvath", "Janssen", "Ferrari", "Nyberg", "Adeyemi", "Laurent", "Sato", "Kruger",
-    "Delgado", "Hughes", "Wójcik", "Ibrahim", "Van Dijk", "Marino", "Papadakis", "Larsen", "Obi", "Romano",
-]
-
 # Extra industry detail used by the four agent types (resilience, margin & cash, customer rescue, growth):
-#   account_segments   indexes of the segments that hold the named key accounts (B2B or partner contracts)
-#   account_suffixes   words used to generate realistic, fictional key-account names
+#   account_segments   indexes of the segments that hold the key accounts (B2B or partner contracts)
+#   account_suffixes   customer types used in key-account labels ("Platinum account · Pharmacies · Germany")
 #   contact_roles      who the account team talks to (roles only — no personal data)
 #   systems            [name, type, capacity headroom %, single point of failure?, process indexes it supports]
 #   regulatory_buffer  [name, unit, current, threshold, monthly change, higher is better?]
@@ -402,12 +388,6 @@ EXTRAS: dict[str, dict] = {
         "friction_themes": [["Slow onboarding", 1], ["Support response times", 2], ["Missing integrations", 1], ["Release regressions", 3]],
     },
 }
-
-ACCOUNT_PREFIXES = [
-    "Nordwind", "Helix", "Ardent", "Brightwater", "Corvid", "Lumen", "Meridian", "Northgate", "Oakline", "Pioneer",
-    "Quanta", "Riverside", "Solace", "Tallis", "Vantage", "Westmark", "Alder", "Beacon", "Cobalt", "Driftwood",
-    "Evergreen", "Fjord", "Granite", "Harbour", "Ironbridge", "Juniper", "Kestrel", "Larkspur", "Marlow", "Nimbus",
-]
 
 # Approximate exchange rates: units of each currency per 1 EUR.
 FX_PER_EUR = {"EUR": 1.0, "USD": 1.09, "GBP": 0.86, "SEK": 11.4, "NOK": 11.6, "DKK": 7.46, "CHF": 0.95, "PLN": 4.3,

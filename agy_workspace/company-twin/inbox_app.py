@@ -98,7 +98,8 @@ def overview() -> dict[str, Any]:
         },
         "layers": layers,
         "business_units": bus,
-        "signals": rows("SELECT * FROM signals ORDER BY severity = 'high' DESC, detected_days_ago"),
+        "signals": rows("SELECT * FROM signals ORDER BY CASE severity WHEN 'strength' THEN 0 WHEN 'high' THEN 1 "
+                           "WHEN 'medium' THEN 2 WHEN 'opportunity' THEN 4 ELSE 3 END, detected_days_ago"),
         "leadership": rows("SELECT * FROM leadership"),
         "agent": rights.get("agent", {}),
     }

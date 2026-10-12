@@ -13,7 +13,8 @@
   - `inbox_app.py` — the Company Twin overview and Decision Inbox where executives approve the agent's requests
     and read its reports.
 - `twin-agent/` — created in Play 2 with `agents-cli` (not present until then).
-- `eval-kit/` — decision-governance eval dataset and metrics for the Play 2 agent.
+- `eval-kit/` — reusable eval metrics for the Play 2 agent (`decision_guardrail_held`, a governance judge) and
+  example cases; the eval dataset itself is written for the agent you chose.
 
 ## Commands (run from this folder)
 
@@ -30,6 +31,15 @@
 ## Conventions
 
 - Ports: 3000 Control Tower · 8080 agent Playground · 8090 Company Twin & Decision Inbox.
-- The twin is synthetic. Never put real people's names in `company_profile.yaml`; leadership names are generated.
+- Work only inside this folder: never read, copy to or edit files in other folders (other copies of this
+  workspace included).
+- Never stop or kill a process you did not start in this conversation. If a port is busy, use the next free one
+  (e.g. 8081, 8091), say so, and check `lsof -i :<port>` before blaming the IDE or the system.
+- The twin is synthetic. It holds no people's names — leaders and owners are roles (e.g. Chief Operating Officer)
+  and key accounts are segment labels. Never add names, in data, prompts, specs or replies.
 - People decisions (performance, careers, compensation, hiring) are never taken by agents.
-- Put screenshots and other verification output in `artifacts/`.
+- Agents built here use the model `gemini-3.8-flash` (never the gemini-2.5 family), including eval judges.
+- When you summarise what you built, quote the model and tool names exactly as they appear in the code.
+- Play 1: verify the Control Tower in a real browser with a screenshot; put screenshots in `artifacts/`.
+- Play 2: no screenshots. Print each local URL as a clickable link and open it (`open http://localhost:8090`,
+  `open http://localhost:8080`).

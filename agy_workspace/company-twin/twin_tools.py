@@ -195,7 +195,7 @@ def evaluate_decision_rights(action_type: str, amount: float = 0.0) -> dict[str,
 
 def get_decision_rights() -> dict[str, Any]:
     """Returns the agent's decision rights: which actions it may take alone, up to what limit, which need which
-    executive's approval, and which are forbidden. Executive names are resolved from the twin's leadership."""
+    executive's approval, and which are forbidden. Executive titles are resolved from the twin's leadership (roles only, no names)."""
     rights = _rights()
     leaders = _leaders()
     for rule in [rights.get("default", {}), *rights.get("actions", {}).values()]:
@@ -303,7 +303,7 @@ def take_action(action_type: str, target: str, amount: float, rationale: str, ap
 
     - Autonomous actions (or amounts within the autonomous limit) are executed immediately and logged.
     - Actions that need a human file an approval request in the Decision Inbox and return PENDING_APPROVAL.
-      Once the executive has approved, call again with approved_by set to their name.
+      Once the executive has approved, call again with approved_by set to their role.
     - Forbidden actions are refused.
 
     Args:
@@ -623,7 +623,7 @@ def research_market(query: str) -> dict[str, Any]:
         from google.genai import types
 
         resp = genai.Client().models.generate_content(
-            model="gemini-3.6-flash",
+            model="gemini-3.8-flash",
             contents=f"Research this with Google Search and summarise the key facts, figures and trends in 6 bullet points, citing sources: {query}",
             config=types.GenerateContentConfig(tools=[types.Tool(google_search=types.GoogleSearch())], temperature=0.2),
         )
@@ -702,7 +702,7 @@ def save_report(title: str, content: str) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# The four agent designs
+# The four agent designs ("sponsor" is the human in the loop: the role that owns the process)
 # ---------------------------------------------------------------------------
 
 _SHARED = ["get_company_overview", "list_twin_tables", "query_twin", "get_kpi_trend", "get_signals",
@@ -710,7 +710,7 @@ _SHARED = ["get_company_overview", "list_twin_tables", "query_twin", "get_kpi_tr
 
 AGENT_TYPES: dict[str, dict[str, Any]] = {
     "operational_resilience": {
-        "name": "Operational Resilience Agent", "sponsor": "COO / CRO",
+        "name": "Operational Resilience Agent", "sponsor": "COO (operations), CTO for systems",
         "mission": "Move from firefighting to prevention: stress-test operations against internal bottlenecks and "
                    "external shocks, find single points of failure, and act before disruptions cascade.",
         "tools": _SHARED + ["get_dependency_map", "get_buffers", "list_playbooks", "simulate_shock"],
@@ -733,7 +733,7 @@ AGENT_TYPES: dict[str, dict[str, Any]] = {
         "actions": ["executive_alert", "create_initiative", "prioritise_work", "customer_credit", "account_briefing"],
     },
     "growth_scout": {
-        "name": "Growth Scout Agent", "sponsor": "CEO / CSO",
+        "name": "Growth Scout Agent", "sponsor": "Chief Strategy Officer, CEO for pilots",
         "mission": "Turn the twin into a growth engine: pair spare capacity and strengths with live market "
                    "research to propose new revenue streams with a board-ready business case.",
         "tools": _SHARED + ["get_capacity_headroom", "get_market_landscape", "research_market", "simulate_decision"],
