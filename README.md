@@ -22,7 +22,7 @@ The two plays are independent:
 │   ├── requirements.txt                   # Python dependencies (fastapi, uvicorn, google-adk, google-genai, ...)
 │   ├── .agents/
 │   │   ├── rules/                         # cymbal-governance.md (performance, API contracts, rollbacks), deploying.md
-│   │   └── skills/                        # browser (custom), google-agents-cli-*, enable-a2ui, record-demo, review, ...
+│   │   └── skills/                        # browser, company-twin, decision-rights (custom), google-agents-cli-*, enable-a2ui, record-demo, ...
 │   ├── cymbal-control-tower/              # Play 1: the Control Tower — own git repo, v1.3.0 (healthy) -> v1.4.0 (broken)
 │   │   ├── app.py                         # FastAPI API
 │   │   ├── database.py                    # SQLite schema + deterministic seed: 12 services, telemetry, incidents, deploys
@@ -35,7 +35,7 @@ The two plays are independent:
 │   │   ├── decision_rights.yaml           # What the agent may decide alone / with which executive / never
 │   │   ├── twin_tools.py                  # Agent tools: analyse, simulate, act (with human approvals)
 │   │   └── inbox_app.py, static/          # Company Twin overview + Decision Inbox on :8090
-│   └── eval-kit/                          # Play 2 Track B: decision-governance eval (5 cases + deterministic metric)
+│   └── eval-kit/                          # Play 2 Step 6: decision-governance eval (5 cases + deterministic metric)
 └── utils/                                 # Facilitators only
     ├── lab-agy-gdoc.md                    # Executive briefing & copy-paste prompts for both plays
     ├── WORKSHOP_GUIDE.md                  # Run of show, timings and facilitator notes
@@ -44,7 +44,7 @@ The two plays are independent:
     ├── cymbal-control-tower.bundle        # Git bundle with the v1.3.0 -> v1.4.0 history
     ├── run_agy_lab.sh                     # Runs every prompt in one Antigravity session on a throwaway copy
     ├── test_workshop_e2e.py               # Verifies the exercise is intact
-    └── reference/                         # Answer keys, reference agent, example spec, Track B fix, screenshots
+    └── reference/                         # Answer keys, reference agent, example spec, Step 6 fix, screenshots
 ```
 
 ---
@@ -54,7 +54,7 @@ The two plays are independent:
 | Play | Focus | Key commands & skills | Outcome |
 | :--- | :--- | :--- | :--- |
 | **Play 1 (15–20 min)** | **Command an autonomous engineering team** | `/browser`, `/grill-me`, `/plan`, `/goal` (parallel subagents), `/learn`, `/schedule` | See the broken dashboard, make the leadership trade-offs (roll back vs fix forward), get a plan, approve it into parallel backend/frontend subagents, verify with a real-browser screenshot, codify a release gate and watch it hold, schedule a CTO briefing. |
-| **Play 2 (30 min)** | **An autonomous agent that runs your company's digital twin** | research + `/browser`, `/grill-me`, "Use agents-cli to build…" (workflow + scaffold), `/google-agents-cli-eval`, `/enable-a2ui`, `/record-demo` | Reshape the twin into your company, agree the agent's decision rights, build it with one sentence, let it find the root cause and act — alone where allowed, through the Decision Inbox where not — then red-team the human approvals and enforce them in code. |
+| **Play 2 (30 min)** | **An autonomous agent that runs your company's digital twin** | `/company-twin`, `/grill-me`, "Use agents-cli to build…" (workflow + scaffold), `/google-agents-cli-eval`, `/enable-a2ui`, `/record-demo` | Reshape the twin into your company, agree the agent's decision rights, build it with one sentence, let it find the root cause and act — alone where allowed, through the Decision Inbox where not — then red-team the human approvals and enforce them in code. |
 
 ---
 
