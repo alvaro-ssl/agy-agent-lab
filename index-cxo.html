@@ -545,54 +545,125 @@
                         <p class="mb-0"><strong>Bundled Demo Dataset (Plays 2&ndash;5):</strong> Anchored to <strong>Monday 19 October 2026</strong> (October figures are month-to-date: 19 of 31 days). October MTD Revenue: <strong>&pound;1,980.0K</strong> &middot; EBITDA: <strong>&pound;1,235.5K</strong> (62.4% margin) &middot; Free Cash Flow: <strong>&pound;1,090.5K</strong> (88.3% conversion).</p>
                     </div>
 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Play</th>
-                                <th>Gemini Agents Capability Shown</th>
-                                <th>Business Outcome</th>
-                                <th>Signature Output</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong><a href="#play-1">1 &middot; Strategy at the speed of the market</a></strong></td>
-                                <td>Multi-model (Gemini + Claude in one task) &middot; Subagents &middot; Skills &middot; Live Web Grounding</td>
-                                <td><strong>Speed</strong> &mdash; a board-ready strategic view in minutes, challenged by a second frontier model</td>
-                                <td>HTML strategic brief, red-team critique, branded slide deck (HTML + Google Slides / <code>.pptx</code> + <code>.docx</code>)</td>
-                                <td>~25 min</td>
-                            </tr>
-                            <tr>
-                                <td><strong><a href="#play-2">2 &middot; Your AI Chief of Staff</a></strong></td>
-                                <td>Workspace connectors (Gmail, Calendar, Drive) &middot; Memory &middot; Routines &amp; Schedules</td>
-                                <td><strong>Value</strong> &mdash; 5+ hours a week back, every week</td>
-                                <td>BLUF triage, persona-matched board drafts, EBITDA/FCF table, saved 08:00 routine</td>
-                                <td>~25 min</td>
-                            </tr>
-                            <tr>
-                                <td><strong><a href="#play-3">3 &middot; Never be surprised</a></strong></td>
-                                <td>Scheduled autonomous agent &middot; Human-in-the-loop approvals &middot; Goal mode</td>
-                                <td><strong>Risk</strong> &mdash; market shifts priced in &pound; before the first meeting</td>
-                                <td>&pound;-at-stake radar with interactive what-if sliders, approved drafts &amp; holds</td>
-                                <td>~13 min</td>
-                            </tr>
-                            <tr>
-                                <td><strong><a href="#play-4">4 &middot; Trust by design</a></strong></td>
-                                <td>Guardian auto-review &middot; Approvals &middot; Audit trail &middot; Admin controls</td>
-                                <td><strong>Trust</strong> &mdash; agents that refuse what they should, and prove it</td>
-                                <td>Blocked prompt injection, refused exfiltration, <code>agent_trust_report.html</code>, OTel trace</td>
-                                <td>~11 min</td>
-                            </tr>
-                            <tr>
-                                <td><strong><a href="#play-5">5 &middot; Walk into the board prepared</a></strong></td>
-                                <td>Multi-model jury &middot; Skills &middot; Drive connector</td>
-                                <td><strong>Confidence</strong> &mdash; rehearse the hardest 20 minutes of the quarter, scored by two independent models</td>
-                                <td>Red-team Q&amp;A per director, two independent model scores, coached answer</td>
-                                <td>~9 min</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="not-prose ga-play-cards">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <a href="#play-1" onclick="event.preventDefault(); document.getElementById('play-1').scrollIntoView({behavior: 'smooth'});"
+                           class="group block rounded-2xl border border-slate-200 bg-white p-5 hover:border-emerald-300 hover:shadow-md transition-all no-underline">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-100 text-emerald-700 shrink-0">
+                                        <span class="material-symbols-outlined text-xl">monitoring</span>
+                                    </div>
+                                    <div>
+                                        <div class="text-[11px] font-bold uppercase tracking-[.14em] text-slate-400">Play 1</div>
+                                        <div class="text-base font-bold text-slate-900 leading-snug">Strategy at the speed of the market</div>
+                                    </div>
+                                </div>
+                                <span class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-900 text-white">
+                                    <span class="material-symbols-outlined text-sm">schedule</span>~25 min
+                                </span>
+                            </div>
+                            <p class="mt-3 text-sm text-slate-700 leading-relaxed">A board-ready strategic assessment of <strong>your own company</strong> from its latest results, stress-tested by a second AI, plus a branded deck in Google Slides.</p>
+                            <p class="mt-2 text-xs text-slate-500 leading-relaxed">You leave with: a cited brief, a red-team critique, a 6-slide deck and a decision to take to your board.</p>
+                            <div class="mt-3 text-[11px] font-bold uppercase tracking-[.12em] text-slate-400">Gemini Agents strengths you&rsquo;ll use</div>
+                            <div class="mt-1.5 flex flex-wrap gap-1.5"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Live web grounding</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">3 parallel sub-agents</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Gemini + Claude in one task</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Skills</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">Google Slides &amp; Docs</span></div>
+                            <div class="mt-4 text-xs font-semibold text-emerald-700 group-hover:translate-x-0.5 transition-transform">Go to Play 1 &rarr;</div>
+                        </a>
+                        <a href="#play-2" onclick="event.preventDefault(); document.getElementById('play-2').scrollIntoView({behavior: 'smooth'});"
+                           class="group block rounded-2xl border border-slate-200 bg-white p-5 hover:border-teal-300 hover:shadow-md transition-all no-underline">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-teal-100 text-teal-700 shrink-0">
+                                        <span class="material-symbols-outlined text-xl">psychology_alt</span>
+                                    </div>
+                                    <div>
+                                        <div class="text-[11px] font-bold uppercase tracking-[.14em] text-slate-400">Play 2</div>
+                                        <div class="text-base font-bold text-slate-900 leading-snug">Your AI Chief of Staff</div>
+                                    </div>
+                                </div>
+                                <span class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-900 text-white">
+                                    <span class="material-symbols-outlined text-sm">schedule</span>~25 min
+                                </span>
+                            </div>
+                            <p class="mt-3 text-sm text-slate-700 leading-relaxed">Your inbox, calendar and strategy docs triaged into <strong>what matters today</strong>, with board updates drafted for you, not sent.</p>
+                            <p class="mt-2 text-xs text-slate-500 leading-relaxed">You leave with: a priority-vs-noise table, two persona-matched drafts, EBITDA/FCF in a table and a daily 08:00 briefing.</p>
+                            <div class="mt-3 text-[11px] font-bold uppercase tracking-[.12em] text-slate-400">Gemini Agents strengths you&rsquo;ll use</div>
+                            <div class="mt-1.5 flex flex-wrap gap-1.5"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-teal-50 text-teal-800 border border-teal-200">Gmail, Calendar &amp; Drive connectors</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-teal-50 text-teal-800 border border-teal-200">Memory</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-teal-50 text-teal-800 border border-teal-200">Scheduled routines</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-teal-50 text-teal-800 border border-teal-200">Drafts, never auto-send</span></div>
+                            <div class="mt-4 text-xs font-semibold text-teal-700 group-hover:translate-x-0.5 transition-transform">Go to Play 2 &rarr;</div>
+                        </a>
+                        <a href="#play-3" onclick="event.preventDefault(); document.getElementById('play-3').scrollIntoView({behavior: 'smooth'});"
+                           class="group block rounded-2xl border border-slate-200 bg-white p-5 hover:border-amber-300 hover:shadow-md transition-all no-underline">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-100 text-amber-700 shrink-0">
+                                        <span class="material-symbols-outlined text-xl">radar</span>
+                                    </div>
+                                    <div>
+                                        <div class="text-[11px] font-bold uppercase tracking-[.14em] text-slate-400">Play 3</div>
+                                        <div class="text-base font-bold text-slate-900 leading-snug">Never be surprised</div>
+                                    </div>
+                                </div>
+                                <span class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-900 text-white">
+                                    <span class="material-symbols-outlined text-sm">schedule</span>~13 min
+                                </span>
+                            </div>
+                            <p class="mt-3 text-sm text-slate-700 leading-relaxed">Market and competitor moves <strong>priced in £ against your plan</strong> before your next meeting, with an agent that keeps watching.</p>
+                            <p class="mt-2 text-xs text-slate-500 leading-relaxed">You leave with: a risk radar dashboard, alert drafts, a what-if on your P&amp;L and an always-on watch.</p>
+                            <div class="mt-3 text-[11px] font-bold uppercase tracking-[.12em] text-slate-400">Gemini Agents strengths you&rsquo;ll use</div>
+                            <div class="mt-1.5 flex flex-wrap gap-1.5"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">Grounded market search</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">Decision router</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">Human-in-the-loop holds</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">Goal mode</span></div>
+                            <div class="mt-4 text-xs font-semibold text-amber-700 group-hover:translate-x-0.5 transition-transform">Go to Play 3 &rarr;</div>
+                        </a>
+                        <a href="#play-4" onclick="event.preventDefault(); document.getElementById('play-4').scrollIntoView({behavior: 'smooth'});"
+                           class="group block rounded-2xl border border-slate-200 bg-white p-5 hover:border-sky-300 hover:shadow-md transition-all no-underline">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-sky-100 text-sky-700 shrink-0">
+                                        <span class="material-symbols-outlined text-xl">verified_user</span>
+                                    </div>
+                                    <div>
+                                        <div class="text-[11px] font-bold uppercase tracking-[.14em] text-slate-400">Play 4</div>
+                                        <div class="text-base font-bold text-slate-900 leading-snug">Trust by design</div>
+                                    </div>
+                                </div>
+                                <span class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-900 text-white">
+                                    <span class="material-symbols-outlined text-sm">schedule</span>~11 min
+                                </span>
+                            </div>
+                            <p class="mt-3 text-sm text-slate-700 leading-relaxed">Proof that agents <strong>refuse what they should</strong>: a planted attack is blocked, exfiltration is refused and an audit pack is produced.</p>
+                            <p class="mt-2 text-xs text-slate-500 leading-relaxed">You leave with: an agent trust &amp; audit report you could hand to your CISO, General Counsel or auditor.</p>
+                            <div class="mt-3 text-[11px] font-bold uppercase tracking-[.12em] text-slate-400">Gemini Agents strengths you&rsquo;ll use</div>
+                            <div class="mt-1.5 flex flex-wrap gap-1.5"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-800 border border-sky-200">Guardian auto-review</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-800 border border-sky-200">Approval controls</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-800 border border-sky-200">Audit trail &amp; OpenTelemetry</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-800 border border-sky-200">Admin policies</span></div>
+                            <div class="mt-4 text-xs font-semibold text-sky-700 group-hover:translate-x-0.5 transition-transform">Go to Play 4 &rarr;</div>
+                        </a>
+                        <a href="#play-5" onclick="event.preventDefault(); document.getElementById('play-5').scrollIntoView({behavior: 'smooth'});"
+                           class="group block rounded-2xl border border-slate-200 bg-white p-5 hover:border-violet-300 hover:shadow-md transition-all no-underline">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-violet-100 text-violet-700 shrink-0">
+                                        <span class="material-symbols-outlined text-xl">co_present</span>
+                                    </div>
+                                    <div>
+                                        <div class="text-[11px] font-bold uppercase tracking-[.14em] text-slate-400">Play 5</div>
+                                        <div class="text-base font-bold text-slate-900 leading-snug">Walk into the board prepared</div>
+                                    </div>
+                                </div>
+                                <span class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-900 text-white">
+                                    <span class="material-symbols-outlined text-sm">schedule</span>~9 min
+                                </span>
+                            </div>
+                            <p class="mt-3 text-sm text-slate-700 leading-relaxed">Rehearse your hardest <strong>20 minutes of the quarter</strong>: every director&rsquo;s toughest question, then your answer scored by two independent AIs.</p>
+                            <p class="mt-2 text-xs text-slate-500 leading-relaxed">You leave with: a rehearsal brief, coached answers and a sharper answer in 60 words or fewer.</p>
+                            <div class="mt-3 text-[11px] font-bold uppercase tracking-[.12em] text-slate-400">Gemini Agents strengths you&rsquo;ll use</div>
+                            <div class="mt-1.5 flex flex-wrap gap-1.5"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-violet-50 text-violet-800 border border-violet-200">Multi-model jury</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-violet-50 text-violet-800 border border-violet-200">Skills</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-violet-50 text-violet-800 border border-violet-200">Drive connector</span><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-violet-50 text-violet-800 border border-violet-200">Coaching loop</span></div>
+                            <div class="mt-4 text-xs font-semibold text-violet-700 group-hover:translate-x-0.5 transition-transform">Go to Play 5 &rarr;</div>
+                        </a>
+                            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 flex flex-col justify-center">
+                                <div class="text-[11px] font-bold uppercase tracking-[.14em] text-slate-400">The whole morning</div>
+                                <div class="mt-1 text-2xl font-bold text-slate-900">~80 min of agent time</div>
+                                <p class="mt-2 text-sm text-slate-600 leading-relaxed">Plays run in parallel: start the next one in a new task while an agent works. Most groups finish all five in <strong>about 60 minutes</strong>. The first prompt of each play is the longest (6&ndash;11 min); follow-ups take 1&ndash;5 min.</p>
+                            </div>
+                        </div>
+                    </div>
 
                     <h3><strong>Model Picker Guide</strong></h3>
                     <table>
